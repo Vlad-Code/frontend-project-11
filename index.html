@@ -9,11 +9,17 @@
             <h1>RSS агрегатор</h1>
             <p>Начните читать RSS сегодня! Это легко, это красиво.</p>
             <div class="row">
-                <div class="col-md" style="background-color: red;">Form</div>
-                <div class="col-md" style="background-color: blue;">Form</div>
-                <div class="col-md" style="background-color: blueviolet;">Form</div>
+                <form class="row align-items-center">
+                    <div class="mb-3 col-9">
+                      <label for="inputURL" class="form-label"></label>
+                      <input type="rss" class="form-control" id="inputURL" aria-describedby="rssHelp">
+                      <div id="rssHelp" class="form-text">Пример: https://ru.hexlet.io/lessons.rss.</div>
+                    </div>
+                    <div class="col-3">
+                      <button type="submit" class="btn btn-primary align-middle">Добавить</button>
+                    </div>
+                </form>
             </div>
         </div>
     </body>
-    
 </html>
