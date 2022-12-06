@@ -2,11 +2,13 @@ import 'bootstrap';
 import _ from 'lodash';
 import * as yup from 'yup';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import i18next from 'i18next';
 import watchState from './view.js';
+import ru from './ru.js';
 
 const schema = yup.string().url();
 
-const validate = (url) => schema.validate(url, { abortEarly: false })
+const validate = (url) => schema.validate(url, { abortEarly: false });
   /*.then((data) => data)
   .catch((e) => e);*/
 
@@ -18,6 +20,19 @@ const app = () => {
       feeds: [],
     },
   };
+  i18next.init({
+    lng: 'ru',
+    debug: true,
+    resources: {
+      ru,
+    },
+  }).then(() => {
+    const header = document.querySelector('.display-3');
+    console.log(header);
+    header.textContent = i18next.t('headerOne');
+  });
+  //const header = document.querySelector('.display-3');
+  //header.textContent = i18next.t('headerOne');
   const watchedState = watchState(state);
   const form = document.querySelector('.rss-form');
   const input = form.elements.url;
@@ -51,6 +66,31 @@ const app = () => {
   });
 };
 
+/*const runApp = () => {
+  const i18nextInstance = i18next.createInstance();
+  const i18nextPromise = i18nextInstance.init({
+    lng: 'ru',
+    debug: true,
+    resources: {
+      ru,
+    },
+  });
+  app(i18nextPromise);
+};*/
+
+/*const runApp = async () => {
+  const i18nextInstance = i18next.createInstance();
+  await i18nextInstance.init({
+    lng: 'ru',
+    debug: true,
+    resources: {
+      ru,
+    },
+  });
+  app(i18nextInstance);
+};*/
+
+//runApp();
 app();
 
 console.log('Hello World!');
