@@ -6,59 +6,39 @@ import i18next from 'i18next';
 import watchState from './view.js';
 import ru from './ru.js';
 
-const schema = yup.string().url();
-
-const validate = (url) => schema.validate(url, { abortEarly: false });
-  /*.then((data) => data)
-  .catch((e) => e);*/
-
-const app = () => {
+const app = (i18nextInstance) => {
   const state = {
     rssForm: {
+      url: null,
       valid: true,
-      validationErrors: {},
+      validationError: null,
       feeds: [],
     },
   };
-  i18next.init({
-    lng: 'ru',
-    debug: true,
-    resources: {
-      ru,
-    },
-  }).then(() => {
-    const header = document.querySelector('.display-3');
-    console.log(header);
-    header.textContent = i18next.t('headerOne');
-  });
-  //const header = document.querySelector('.display-3');
-  //header.textContent = i18next.t('headerOne');
-  const watchedState = watchState(state);
+  let schema = yup.string().trim().required().url()
+    .notOneOf([]);
+  const validate = (url) => schema.validate(url, { abortEarly: false });
+  const watchedState = watchState(state, i18nextInstance);
   const form = document.querySelector('.rss-form');
   const input = form.elements.url;
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const url = formData.get('url');
+    watchedState.rssForm.url = url;
     validate(url)
       .then((data) => {
-        console.log(data);
-        if (!state.rssForm.feeds.includes(data)) {
-          watchedState.rssForm.valid = true;
-          watchedState.rssForm.validationErrors = {};
-          state.rssForm.feeds.push(data);
-          form.reset();
-          input.focus();
-        } else {
-          watchedState.rssForm.valid = false;
-          watchedState.rssForm.validationErrors.error = 'RSS уже существует';
-          form.reset();
-          input.focus();
-        }
+        watchedState.rssForm.valid = true;
+        watchedState.rssForm.validationError = null;
+        state.rssForm.feeds.push(data);
+        schema = yup.string().trim().required().url()
+          .notOneOf(state.rssForm.feeds);
+        form.reset();
+        input.focus();
       })
       .catch((error) => {
         watchedState.rssForm.valid = false;
-        watchedState.rssForm.validationErrors.error = error;
+        watchedState.rssForm.validationError = error.errors;
         form.reset();
         input.focus();
       });
@@ -66,31 +46,17 @@ const app = () => {
   });
 };
 
-/*const runApp = () => {
+const runApp = () => {
   const i18nextInstance = i18next.createInstance();
-  const i18nextPromise = i18nextInstance.init({
+  i18nextInstance.init({
     lng: 'ru',
     debug: true,
     resources: {
       ru,
     },
-  });
-  app(i18nextPromise);
-};*/
+  }).then(() => app(i18nextInstance));
+};
 
-/*const runApp = async () => {
-  const i18nextInstance = i18next.createInstance();
-  await i18nextInstance.init({
-    lng: 'ru',
-    debug: true,
-    resources: {
-      ru,
-    },
-  });
-  app(i18nextInstance);
-};*/
-
-//runApp();
-app();
+runApp();
 
 console.log('Hello World!');
