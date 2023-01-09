@@ -34,6 +34,7 @@ const renderFeedbackLoading = (error, i18nextInstance) => {
 
 const renderFeed = (value) => {
   const feeds = document.querySelector('.feeds');
+  feeds.innerHTML = '';
   const container = document.createElement('div');
   container.classList.add('card', 'border-0');
   feeds.append(container);
@@ -64,6 +65,7 @@ const renderFeed = (value) => {
 
 const renderPost = (posts) => {
   const postElement = document.querySelector('.posts');
+  postElement.innerHTML = '';
   const container = document.createElement('div');
   container.classList.add('card', 'border-0');
   postElement.append(container);
@@ -77,9 +79,7 @@ const renderPost = (posts) => {
   const postsList = document.createElement('ul');
   postsList.classList.add('list-group-item', 'border-0', 'border-end-0');
   container.append(postsList);
-  console.log(posts);
   posts.forEach((post) => {
-    console.log(post);
     const li = document.createElement('li');
     li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
     postsList.append(li);
@@ -115,14 +115,15 @@ const watchState = (state, i18nextInstance) => onChange(state, (path, value) => 
     renderFeedbackValidation(value, i18nextInstance);
   }
   if (path === 'rssLoading.state') {
-    if (value === 'failed') {
-      renderFeedbackLoading(state.rssLoading.error, i18nextInstance);
-    } else if (value === 'processed') {
+    if (value === 'processed') {
       console.log('yes');
       renderFeedbackLoading(null, i18nextInstance);
       renderFeed(state.rssLoading.feeds);
       renderPost(state.rssLoading.posts);
     }
+  }
+  if (path === 'rssLoading.error') {
+    renderFeedbackLoading(value, i18nextInstance);
   }
 });
 

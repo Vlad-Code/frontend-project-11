@@ -13,6 +13,48 @@ const parse = (string) => {
   return content;
 };
 
+const request = (watchedState) => {
+  if (watchedState.rssLoading.state === 'failed') {
+    return;
+  }
+  console.log('time');
+  const feeds = watchedState.rssLoading.feeds;
+  const posts = watchedState.rssLoading.posts;
+  feeds.forEach((feed) => {
+    const url = feed.feedUrl;
+    const id = feed.id;
+    axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(`${url}`)}`)
+      .then((response) => {
+        const stringXML = response.data.contents;
+        const rssDocument = parse(stringXML);
+        const items = rssDocument.querySelectorAll('item');
+        items.forEach((item) => {
+          const itemTitle = item.querySelector('title').textContent;
+          const itemLink = item.querySelector('link').textContent;
+          const itemId = id;
+          const newItem = { itemTitle, itemLink, itemId };
+          const newPost = posts.filter((post) => {
+            if (post.itemTitle === newItem.itemTitle && post.itemLink === newItem.itemLink) {
+              return true;
+            }
+            return false;
+          });
+          console.log(newPost);
+          if (newPost.length === 0) {
+            watchedState.rssLoading.posts.push(newItem);
+          }
+        });
+        watchedState.rssLoading.state = 'processed';
+        watchedState.rssLoading.state = 'initial';
+      })
+      .catch((networkErr) => {
+        watchedState.rssLoading.state = 'failed';
+        watchedState.rssLoading.error = networkErr.code;
+      });
+  });
+  setTimeout(request, 5000, watchedState);
+};
+
 const app = (i18nextInstance) => {
   const initialState = {
     formRegistration: {
@@ -43,25 +85,27 @@ const app = (i18nextInstance) => {
       .then((data) => {
         watchedState.formRegistration.valid = true;
         watchedState.formRegistration.validationError = null;
-        initialState.formRegistration.feeds.push(data);
+        watchedState.formRegistration.feeds.push(data);
         schema = yup.string().trim().required().url()
-          .notOneOf(initialState.formRegistration.feeds);
+          .notOneOf(watchedState.formRegistration.feeds);
         form.reset();
         input.focus();
-        axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(`${initialState.formRegistration.url}`)}`)
+        axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(`${watchedState.formRegistration.url}`)}`)
           .then((response) => {
             const contentType = response.data.status.content_type;
             console.log(contentType);
             if (contentType !== 'application/rss+xml; charset=utf-8') {
               watchedState.rssLoading.state = 'failed';
               watchedState.rssLoading.error = 'ERR_CONTENT';
+              watchedState.formRegistration.feeds.pop();
               return;
             }
             const stringXML = response.data.contents;
             const rssDocument = parse(stringXML);
             const feedTitle = rssDocument.querySelector('title').textContent;
             const feedDescription = rssDocument.querySelector('description').textContent;
-            const newFeed = { feedTitle, feedDescription, id: _.uniqueId() };
+            const feedUrl = watchedState.formRegistration.url;
+            const newFeed = { feedTitle, feedDescription, id: _.uniqueId(), feedUrl };
             watchedState.rssLoading.feeds.push(newFeed);
             watchedState.rssLoading.error = null;
             const items = rssDocument.querySelectorAll('item');
@@ -74,15 +118,18 @@ const app = (i18nextInstance) => {
             });
             watchedState.rssLoading.state = 'processed';
             watchedState.rssLoading.state = 'initial';
-            watchedState.rssLoading.feeds = [];
-            watchedState.rssLoading.posts = [];
-            console.log(watchedState.rssLoading.posts);
+            //watchedState.rssLoading.feeds = [];
+            //watchedState.rssLoading.posts = [];
           })
           .catch((networkErr) => {
             watchedState.rssLoading.state = 'failed';
             watchedState.rssLoading.error = networkErr.code;
             console.log(watchedState.rssLoading);
           });
+      })
+      .then(() => {
+        console.log(watchedState.rssLoading.feeds);
+        setTimeout(request, 5000, watchedState);
       })
       .catch((error) => {
         const [errorType] = error.errors;
