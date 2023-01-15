@@ -31,8 +31,9 @@ const request = (watchedState) => {
         items.forEach((item) => {
           const itemTitle = item.querySelector('title').textContent;
           const itemLink = item.querySelector('link').textContent;
+          const itemDescription = item.querySelector('description').textContent;
           const itemId = id;
-          const newItem = { itemTitle, itemLink, itemId };
+          const newItem = { itemTitle, itemLink, itemId, itemDescription };
           const newPost = posts.filter((post) => {
             if (post.itemTitle === newItem.itemTitle && post.itemLink === newItem.itemLink) {
               return true;
@@ -52,7 +53,7 @@ const request = (watchedState) => {
         watchedState.rssLoading.error = networkErr.code;
       });
   });
-  setTimeout(request, 5000, watchedState);
+  //setTimeout(request, 5000, watchedState);
 };
 
 const app = (i18nextInstance) => {
@@ -68,6 +69,12 @@ const app = (i18nextInstance) => {
       feeds: [],
       posts: [],
       error: null,
+    },
+    uiState: {
+      modal: {
+        postId: null,
+        visibility: 'hidden',
+      },
     },
   };
   let schema = yup.string().trim().required().url()
@@ -112,8 +119,9 @@ const app = (i18nextInstance) => {
             items.forEach((item) => {
               const itemTitle = item.querySelector('title').textContent;
               const itemLink = item.querySelector('link').textContent;
+              const itemDescription = item.querySelector('description').textContent;
               const itemId = newFeed.id;
-              const newItem = { itemTitle, itemLink, itemId };
+              const newItem = { itemTitle, itemLink, itemId, itemDescription };
               watchedState.rssLoading.posts.push(newItem);
             });
             watchedState.rssLoading.state = 'processed';
@@ -139,6 +147,15 @@ const app = (i18nextInstance) => {
         input.focus();
         console.log(watchedState.formRegistration.validationError);
       });
+  });
+  const myModal = document.querySelector('#modal');
+  myModal.addEventListener('shown.bs.modal', (event) => {
+    console.log('modal is working');
+    const button = event.relatedTarget;
+    const anchor = button.previousElementSibling;
+    const anchorId = anchor.getAttribute('data-id');
+    watchedState.uiState.modal.visibility = 'shown';
+    watchedState.uiState.modal.postId = anchorId;
   });
 };
 

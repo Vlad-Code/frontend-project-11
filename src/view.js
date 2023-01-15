@@ -80,13 +80,14 @@ const renderPost = (posts) => {
   postsList.classList.add('list-group-item', 'border-0', 'border-end-0');
   container.append(postsList);
   posts.forEach((post) => {
+    const itemId = posts.indexOf(post);
     const li = document.createElement('li');
     li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
     postsList.append(li);
     const ancor = document.createElement('a');
     ancor.classList.add('fw-bold');
     ancor.setAttribute('href', post.itemLink);
-    ancor.setAttribute('data-id', post.itemId);
+    ancor.setAttribute('data-id', itemId);
     ancor.setAttribute('target', '_blank');
     ancor.setAttribute('rel', 'noopener noreferrer');
     li.append(ancor);
@@ -100,6 +101,24 @@ const renderPost = (posts) => {
     button.textContent = 'Просмотр';
     li.append(button);
   });
+};
+
+const renderModal = (id, watchedState) => {
+  const postAnchor = document.querySelector(`a[data-id="${id}"]`);
+  console.log(postAnchor);
+  postAnchor.classList.remove('fw-bold');
+  postAnchor.classList.add('fw-normal');
+  const myModal = document.querySelector('#modal');
+  const title = postAnchor.textContent;
+  const modalTitle = myModal.querySelector('.modal-title');
+  modalTitle.textContent = title;
+  const post = watchedState.rssLoading.posts[id];
+  const postDescription = post.itemDescription;
+  const modalBody = myModal.querySelector('.modal-body');
+  modalBody.textContent = postDescription;
+  const readButton = myModal.querySelector('[target="_blank"]');
+  const postLink = post.itemLink;
+  readButton.setAttribute('href', postLink);
 };
 
 const watchState = (state, i18nextInstance) => onChange(state, (path, value) => {
@@ -124,6 +143,9 @@ const watchState = (state, i18nextInstance) => onChange(state, (path, value) => 
   }
   if (path === 'rssLoading.error') {
     renderFeedbackLoading(value, i18nextInstance);
+  }
+  if (path === 'uiState.modal.postId') {
+    renderModal(value, state);
   }
 });
 
