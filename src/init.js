@@ -103,7 +103,6 @@ const app = (i18nextInstance) => {
         axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(`${watchedState.formRegistration.url}`)}`)
           .then((response) => {
             const contentType = response.data.status.content_type;
-            console.log(contentType);
             if (contentType !== 'application/rss+xml; charset=utf-8') {
               watchedState.rssLoading.state = 'failed';
               watchedState.rssLoading.error = 'ERR_CONTENT';
@@ -137,7 +136,6 @@ const app = (i18nextInstance) => {
           .catch((networkErr) => {
             watchedState.rssLoading.state = 'failed';
             watchedState.rssLoading.error = networkErr.code;
-            console.log(watchedState.rssLoading);
           });
       })
       .then(() => {
@@ -149,7 +147,6 @@ const app = (i18nextInstance) => {
         watchedState.formRegistration.validationError = errorType;
         form.reset();
         input.focus();
-        console.log(watchedState.formRegistration.validationError);
       });
   });
   const myModal = document.querySelector('#modal');
@@ -160,7 +157,6 @@ const app = (i18nextInstance) => {
     const anchorId = anchor.getAttribute('data-id');
     watchedState.uiState.modal.openedWindowId = anchorId;
     watchedState.uiState.modal.readingState.push(Number(anchorId));
-    console.log(watchedState.uiState.modal);
   });
 };
 
