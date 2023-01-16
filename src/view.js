@@ -63,7 +63,7 @@ const renderFeed = (value) => {
   });
 };
 
-const renderPost = (posts) => {
+const renderPost = (posts, watchedState) => {
   const postElement = document.querySelector('.posts');
   postElement.innerHTML = '';
   const container = document.createElement('div');
@@ -84,14 +84,16 @@ const renderPost = (posts) => {
     const li = document.createElement('li');
     li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
     postsList.append(li);
-    const ancor = document.createElement('a');
-    ancor.classList.add('fw-bold');
-    ancor.setAttribute('href', post.itemLink);
-    ancor.setAttribute('data-id', itemId);
-    ancor.setAttribute('target', '_blank');
-    ancor.setAttribute('rel', 'noopener noreferrer');
-    li.append(ancor);
-    ancor.textContent = post.itemTitle;
+    const anchor = document.createElement('a');
+    if (!watchedState.uiState.modal.readingState.includes(itemId)) {
+      anchor.classList.add('fw-bold');
+    }
+    anchor.setAttribute('href', post.itemLink);
+    anchor.setAttribute('data-id', itemId);
+    anchor.setAttribute('target', '_blank');
+    anchor.setAttribute('rel', 'noopener noreferrer');
+    li.append(anchor);
+    anchor.textContent = post.itemTitle;
     const button = document.createElement('button');
     button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
     button.setAttribute('type', 'button');
@@ -105,7 +107,6 @@ const renderPost = (posts) => {
 
 const renderModal = (id, watchedState) => {
   const postAnchor = document.querySelector(`a[data-id="${id}"]`);
-  console.log(postAnchor);
   postAnchor.classList.remove('fw-bold');
   postAnchor.classList.add('fw-normal');
   const myModal = document.querySelector('#modal');
@@ -138,13 +139,13 @@ const watchState = (state, i18nextInstance) => onChange(state, (path, value) => 
       console.log('yes');
       renderFeedbackLoading(null, i18nextInstance);
       renderFeed(state.rssLoading.feeds);
-      renderPost(state.rssLoading.posts);
+      renderPost(state.rssLoading.posts, state);
     }
   }
   if (path === 'rssLoading.error') {
     renderFeedbackLoading(value, i18nextInstance);
   }
-  if (path === 'uiState.modal.postId') {
+  if (path === 'uiState.modal.openedWindowId') {
     renderModal(value, state);
   }
 });

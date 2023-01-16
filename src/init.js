@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import 'bootstrap';
 import _ from 'lodash';
 import * as yup from 'yup';
@@ -18,11 +19,11 @@ const request = (watchedState) => {
     return;
   }
   console.log('time');
-  const feeds = watchedState.rssLoading.feeds;
-  const posts = watchedState.rssLoading.posts;
+  const { feeds } = watchedState.rssLoading;
+  const { posts } = watchedState.rssLoading;
   feeds.forEach((feed) => {
     const url = feed.feedUrl;
-    const id = feed.id;
+    const { id } = feed;
     axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(`${url}`)}`)
       .then((response) => {
         const stringXML = response.data.contents;
@@ -33,7 +34,9 @@ const request = (watchedState) => {
           const itemLink = item.querySelector('link').textContent;
           const itemDescription = item.querySelector('description').textContent;
           const itemId = id;
-          const newItem = { itemTitle, itemLink, itemId, itemDescription };
+          const newItem = {
+            itemTitle, itemLink, itemId, itemDescription,
+          };
           const newPost = posts.filter((post) => {
             if (post.itemTitle === newItem.itemTitle && post.itemLink === newItem.itemLink) {
               return true;
@@ -53,7 +56,7 @@ const request = (watchedState) => {
         watchedState.rssLoading.error = networkErr.code;
       });
   });
-  //setTimeout(request, 5000, watchedState);
+  setTimeout(request, 5000, watchedState);
 };
 
 const app = (i18nextInstance) => {
@@ -72,8 +75,8 @@ const app = (i18nextInstance) => {
     },
     uiState: {
       modal: {
-        postId: null,
-        visibility: 'hidden',
+        openedWindowId: null,
+        readingState: [],
       },
     },
   };
@@ -112,7 +115,9 @@ const app = (i18nextInstance) => {
             const feedTitle = rssDocument.querySelector('title').textContent;
             const feedDescription = rssDocument.querySelector('description').textContent;
             const feedUrl = watchedState.formRegistration.url;
-            const newFeed = { feedTitle, feedDescription, id: _.uniqueId(), feedUrl };
+            const newFeed = {
+              feedTitle, feedDescription, id: _.uniqueId(), feedUrl,
+            };
             watchedState.rssLoading.feeds.push(newFeed);
             watchedState.rssLoading.error = null;
             const items = rssDocument.querySelectorAll('item');
@@ -121,13 +126,13 @@ const app = (i18nextInstance) => {
               const itemLink = item.querySelector('link').textContent;
               const itemDescription = item.querySelector('description').textContent;
               const itemId = newFeed.id;
-              const newItem = { itemTitle, itemLink, itemId, itemDescription };
+              const newItem = {
+                itemTitle, itemLink, itemId, itemDescription,
+              };
               watchedState.rssLoading.posts.push(newItem);
             });
             watchedState.rssLoading.state = 'processed';
             watchedState.rssLoading.state = 'initial';
-            //watchedState.rssLoading.feeds = [];
-            //watchedState.rssLoading.posts = [];
           })
           .catch((networkErr) => {
             watchedState.rssLoading.state = 'failed';
@@ -136,7 +141,6 @@ const app = (i18nextInstance) => {
           });
       })
       .then(() => {
-        console.log(watchedState.rssLoading.feeds);
         setTimeout(request, 5000, watchedState);
       })
       .catch((error) => {
@@ -154,8 +158,9 @@ const app = (i18nextInstance) => {
     const button = event.relatedTarget;
     const anchor = button.previousElementSibling;
     const anchorId = anchor.getAttribute('data-id');
-    watchedState.uiState.modal.visibility = 'shown';
-    watchedState.uiState.modal.postId = anchorId;
+    watchedState.uiState.modal.openedWindowId = anchorId;
+    watchedState.uiState.modal.readingState.push(Number(anchorId));
+    console.log(watchedState.uiState.modal);
   });
 };
 
