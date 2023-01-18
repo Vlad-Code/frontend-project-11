@@ -10,8 +10,8 @@ import ru from './ru.js';
 
 const parse = (string) => {
   const parser = new DOMParser();
-  const content = parser.parseFromString(string, 'application/xml');
-  return content;
+  const doc = parser.parseFromString(string, 'application/xml');
+  return doc;
 };
 
 const request = (watchedState) => {
@@ -102,15 +102,23 @@ const app = (i18nextInstance) => {
         input.focus();
         axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(`${watchedState.formRegistration.url}`)}`)
           .then((response) => {
-            const contentType = response.data.status.content_type;
+            /*const contentType = response.data.status.content_type;
             if (contentType !== 'application/rss+xml; charset=utf-8') {
               watchedState.rssLoading.state = 'failed';
               watchedState.rssLoading.error = 'ERR_CONTENT';
               watchedState.formRegistration.feeds.pop();
               return;
-            }
+            }*/
             const stringXML = response.data.contents;
             const rssDocument = parse(stringXML);
+            const errorNode = rssDocument.querySelector('parsererror');
+            if (errorNode) {
+              console.log(errorNode);
+              watchedState.rssLoading.state = 'failed';
+              watchedState.rssLoading.error = 'ERR_CONTENT';
+              watchedState.formRegistration.feeds.pop();
+              return;
+            }
             const feedTitle = rssDocument.querySelector('title').textContent;
             const feedDescription = rssDocument.querySelector('description').textContent;
             const feedUrl = watchedState.formRegistration.url;
