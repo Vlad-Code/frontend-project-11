@@ -1,5 +1,18 @@
 import onChange from 'on-change';
 
+const renderLoading = (value) => {
+  const form = document.querySelector('.rss-form');
+  const input = form.elements.url;
+  const button = document.querySelector('button[type="submit"]');
+  if (value === 'loading') {
+    input.disabled = true;
+    button.disabled = true;
+  } else if (value === 'processed' || value === 'failed') {
+    input.disabled = false;
+    button.disabled = false;
+  }
+};
+
 const renderFeedbackValidation = (error, i18nextInstance) => {
   const feedback = document.querySelector('.feedback');
   if (error === null) {
@@ -20,7 +33,7 @@ const renderFeedbackLoading = (error, i18nextInstance) => {
   if (error === null) {
     feedback.classList.remove('text-danger');
     feedback.classList.add('text-success');
-    feedback.textContent = 'RSS успешно загружен';
+    feedback.textContent = i18nextInstance.t('loadingSuccess');
   } else if (error === 'ERR_CONTENT') {
     feedback.classList.remove('text-success');
     feedback.classList.add('text-danger');
@@ -135,15 +148,24 @@ const watchState = (state, i18nextInstance) => onChange(state, (path, value) => 
     renderFeedbackValidation(value, i18nextInstance);
   }
   if (path === 'rssLoading.state') {
+    if (value === 'loading' || value === 'failed') {
+      renderLoading(value);
+    }
     if (value === 'processed') {
-      console.log('yes');
-      renderFeedbackLoading(null, i18nextInstance);
+      renderLoading(value);
+      if (state.formRegistration.language === 'ru') {
+        i18nextInstance.changeLanguage('ru');
+        renderFeedbackLoading(null, i18nextInstance);
+      }
       renderFeed(state.rssLoading.feeds);
       renderPost(state.rssLoading.posts, state);
     }
   }
   if (path === 'rssLoading.error') {
-    renderFeedbackLoading(value, i18nextInstance);
+    if (state.formRegistration.language === 'ru') {
+      i18nextInstance.changeLanguage('ru');
+      renderFeedbackLoading(value, i18nextInstance);
+    }
   }
   if (path === 'uiState.modal.openedWindowId') {
     renderModal(value, state);
