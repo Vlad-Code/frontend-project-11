@@ -1,5 +1,5 @@
 <h1>RSS-AGREGATOR</h1>
-![Screenshot](https://github.com/Vlad-Code/frontend-project-11/blob/main/Снимок%20экрана%202023-02-01%20213919.png)
+<img src="https://github.com/Vlad-Code/frontend-project-11/blob/main/Снимок%20экрана%202023-02-01%20213919.png">
 <h2>About</h2>
 <p>This is my third training project in the profession of frontend developer. In this project I implemented a simple RSS aggregator. RSS aggregator, is client software or a web application that aggregates syndicated web content such as online newspapers, blogs, podcasts, and video blogs (vlogs) in one location for easy viewing. My RSS agregator updates data of each feed every 5 seconds. In this project I worked a lot with native Javascript, DOM object and MVC architecture of web applications.</p>
 <h2>System requirements</h2>
