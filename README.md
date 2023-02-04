@@ -1,6 +1,6 @@
 <h1>RSS-AGREGATOR</h1>
-[![hexlet-check](https://github.com/Vlad-Code/frontend-project-11/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/Vlad-Code/frontend-project-11/actions/workflows/hexlet-check.yml)
-[![Node CI](https://github.com/Vlad-Code/frontend-project-11/actions/workflows/nodejs.yml/badge.svg)](https://github.com/Vlad-Code/frontend-project-11/actions/workflows/nodejs.yml)
+<p><a href="https://github.com/Vlad-Code/frontend-project-11/actions/workflows/hexlet-check.yml"><img src="https://github.com/Vlad-Code/frontend-project-11/actions/workflows/hexlet-check.yml/badge.svg" alt="hexlet-check"></a></p>
+<p><a href="https://github.com/Vlad-Code/frontend-project-11/actions/workflows/nodejs.yml"><img src="https://github.com/Vlad-Code/frontend-project-11/actions/workflows/nodejs.yml/badge.svg" alt="Node CI"></a></p>
 <a href="https://codeclimate.com/github/Vlad-Code/frontend-project-11/maintainability"><img src="https://api.codeclimate.com/v1/badges/021f9de60d190dc948dc/maintainability" /></a>
 <img src="https://github.com/Vlad-Code/frontend-project-11/blob/main/Снимок%20экрана%202023-02-01%20213919.png">
 <h2>About</h2>

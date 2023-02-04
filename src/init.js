@@ -6,14 +6,14 @@ import i18next from 'i18next';
 import axios from 'axios';
 import watchState from './view.js';
 import resources from './locales/index.js';
-import buildData from './parse.js';
+import parse from './parse.js';
 
-const parse = (response) => {
+/*const parse = (response) => {
   const stringXML = response.data.contents;
   const parser = new DOMParser();
   const doc = parser.parseFromString(stringXML, 'application/xml');
   return doc;
-};
+};*/
 
 const request = (watchedState) => {
   if (watchedState.rssLoading.state === 'failed') {
@@ -62,12 +62,12 @@ const request = (watchedState) => {
 
 const app = (i18nextInstance) => {
   const initialState = {
-    formRegistration: {
+    formState: {
       language: 'ru',
       url: null,
       valid: true,
       validationError: null,
-      feeds: [],
+      feedsUrls: [],
     },
     rssLoading: {
       state: 'ready for loading',
@@ -83,9 +83,9 @@ const app = (i18nextInstance) => {
     },
   };
   const watchedState = watchState(initialState, i18nextInstance);
-  const validate = (url, feeds) => {
+  const validate = (url, feedsUrls) => {
     const schema = yup.string().trim().required().url()
-      .notOneOf(feeds);
+      .notOneOf(feedsUrls);
     return schema.validate(url, { abortEarly: false });
   };
   const form = document.querySelector('.rss-form');
@@ -94,22 +94,35 @@ const app = (i18nextInstance) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const url = formData.get('url');
-    watchedState.formRegistration.url = url;
-    const { feeds } = watchedState.formRegistration;
-    validate(url, feeds)
+    watchedState.formState.url = url;
+    const { feedsUrls } = watchedState.formState;
+    validate(url, feedsUrls)
       .then((data) => {
-        watchedState.formRegistration.valid = true;
-        watchedState.formRegistration.validationError = null;
-        watchedState.formRegistration.feeds.push(data);
+        watchedState.formState.valid = true;
+        watchedState.formState.validationError = null;
+        watchedState.formState.feedsUrls.push(data);
         form.reset();
         input.focus();
         const myUrl = new URL('https://allorigins.hexlet.app/');
         myUrl.pathname = '/get';
-        myUrl.search = `?disableCache=true&url=${encodeURIComponent(`${watchedState.formRegistration.url}`)}`;
+        myUrl.search = `?disableCache=true&url=${encodeURIComponent(`${watchedState.formState.url}`)}`;
         watchedState.rssLoading.state = 'loading';
         axios.get(myUrl)
           .then((response) => {
-            buildData(response, watchedState);
+            const rssString = response.data.contents;
+            const feedAndPosts = parse(rssString);
+            console.log(feedAndPosts);
+            const { feed, posts } = feedAndPosts;
+            if (feed === null && posts.length === 0) {
+              watchedState.rssLoading.state = 'failed';
+              watchedState.rssLoading.error = 'ERR_CONTENT';
+              watchedState.formState.feedsUrls.pop();
+            } else {
+              feed.feedUrl = watchedState.formState.url;
+              watchedState.rssLoading.feeds.push(feed);
+              watchedState.rssLoading.posts = [...posts];
+              watchedState.rssLoading.state = 'processed';
+            }
           })
           .catch((networkErr) => {
             watchedState.rssLoading.state = 'failed';

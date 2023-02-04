@@ -106,7 +106,7 @@ const renderPost = (posts, watchedState) => {
     anchor.setAttribute('target', '_blank');
     anchor.setAttribute('rel', 'noopener noreferrer');
     li.append(anchor);
-    anchor.textContent = post.itemTitle;
+    anchor.textContent = post.postTitle;
     const button = document.createElement('button');
     button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
     button.setAttribute('type', 'button');
@@ -127,16 +127,16 @@ const renderModal = (id, watchedState) => {
   const modalTitle = myModal.querySelector('.modal-title');
   modalTitle.textContent = title;
   const post = watchedState.rssLoading.posts[id];
-  const postDescription = post.itemDescription;
+  const { postDescription } = post;
   const modalBody = myModal.querySelector('.modal-body');
   modalBody.textContent = postDescription;
   const readButton = myModal.querySelector('[target="_blank"]');
-  const postLink = post.itemLink;
+  const { postLink } = post;
   readButton.setAttribute('href', postLink);
 };
 
 const watchState = (state, i18nextInstance) => onChange(state, (path, value) => {
-  if (path === 'formRegistration.valid') {
+  if (path === 'formState.valid') {
     const input = document.querySelector('#url-input');
     if (value === false) {
       input.classList.add('is-invalid');
@@ -144,7 +144,7 @@ const watchState = (state, i18nextInstance) => onChange(state, (path, value) => 
       input.classList.remove('is-invalid');
     }
   }
-  if (path === 'formRegistration.validationError') {
+  if (path === 'formState.validationError') {
     renderFeedbackValidation(value, i18nextInstance);
   }
   if (path === 'rssLoading.state') {
@@ -153,7 +153,7 @@ const watchState = (state, i18nextInstance) => onChange(state, (path, value) => 
     }
     if (value === 'processed') {
       renderLoading(value);
-      if (state.formRegistration.language === 'ru') {
+      if (state.formState.language === 'ru') {
         i18nextInstance.changeLanguage('ru');
         renderFeedbackLoading(null, i18nextInstance);
       }
@@ -162,7 +162,7 @@ const watchState = (state, i18nextInstance) => onChange(state, (path, value) => 
     }
   }
   if (path === 'rssLoading.error') {
-    if (state.formRegistration.language === 'ru') {
+    if (state.formState.language === 'ru') {
       i18nextInstance.changeLanguage('ru');
       renderFeedbackLoading(value, i18nextInstance);
     }
