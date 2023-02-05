@@ -4,60 +4,49 @@ import * as yup from 'yup';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import i18next from 'i18next';
 import axios from 'axios';
+import _ from 'lodash';
 import watchState from './view.js';
 import resources from './locales/index.js';
 import parse from './parse.js';
 
-/*const parse = (response) => {
-  const stringXML = response.data.contents;
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(stringXML, 'application/xml');
-  return doc;
-};*/
+const getUrl = (url) => {
+  const urlWithProxy = new URL('/get', 'https://allorigins.hexlet.app');
+  urlWithProxy.searchParams.set('url', url);
+  urlWithProxy.searchParams.set('disableCache', 'true');
+  return urlWithProxy.toString();
+};
 
-const request = (watchedState) => {
-  if (watchedState.rssLoading.state === 'failed') {
-    return;
-  }
-  const { feeds } = watchedState.rssLoading;
-  const { posts } = watchedState.rssLoading;
+const repeatingRequest = (watchedState) => {
+  watchedState.rssLoading.state = 'ready for loading';
+  const { feeds, posts } = watchedState.rssLoading;
   feeds.forEach((feed) => {
     const url = feed.feedUrl;
-    const { id } = feed;
-    const myUrl = new URL('https://allorigins.hexlet.app/');
-    myUrl.pathname = '/get';
-    myUrl.search = `?disableCache=true&url=${encodeURIComponent(`${url}`)}`;
+    const myUrl = getUrl(url);
     axios.get(myUrl)
       .then((response) => {
-        const rssDocument = parse(response);
-        const items = rssDocument.querySelectorAll('item');
-        items.forEach((item) => {
-          const itemTitle = item.querySelector('title').textContent;
-          const itemLink = item.querySelector('link').textContent;
-          const itemDescription = item.querySelector('description').textContent;
-          const itemId = id;
-          const newItem = {
-            itemTitle, itemLink, itemId, itemDescription,
-          };
-          const newPost = posts.filter((post) => {
-            if (post.itemTitle === newItem.itemTitle && post.itemLink === newItem.itemLink) {
+        const rssString = response.data.contents;
+        const feedAndPosts = parse(rssString);
+        const checkingPosts = feedAndPosts.posts;
+        checkingPosts.forEach((checkingPost) => {
+          const oldPosts = posts.filter((post) => {
+            if (post.postTitle === checkingPost.postTitle
+              && post.postLink === checkingPost.postLink) {
               return true;
             }
             return false;
           });
-          if (newPost.length === 0) {
-            watchedState.rssLoading.posts.push(newItem);
+          if (oldPosts.length === 0) {
+            watchedState.rssLoading.posts.push(checkingPost);
           }
         });
         watchedState.rssLoading.state = 'processed';
-        watchedState.rssLoading.state = 'ready for loading';
       })
       .catch((networkErr) => {
         watchedState.rssLoading.state = 'failed';
         watchedState.rssLoading.error = networkErr.code;
       });
   });
-  setTimeout(request, 5000, watchedState);
+  setTimeout(repeatingRequest, 5000, watchedState);
 };
 
 const app = (i18nextInstance) => {
@@ -95,49 +84,52 @@ const app = (i18nextInstance) => {
     const formData = new FormData(e.target);
     const url = formData.get('url');
     watchedState.formState.url = url;
+    const myUrl = getUrl(url);
     const { feedsUrls } = watchedState.formState;
     validate(url, feedsUrls)
-      .then((data) => {
+      .then((checkedUrl) => {
         watchedState.formState.valid = true;
         watchedState.formState.validationError = null;
-        watchedState.formState.feedsUrls.push(data);
+        watchedState.formState.feedsUrls.push(checkedUrl);
         form.reset();
         input.focus();
-        const myUrl = new URL('https://allorigins.hexlet.app/');
-        myUrl.pathname = '/get';
-        myUrl.search = `?disableCache=true&url=${encodeURIComponent(`${watchedState.formState.url}`)}`;
         watchedState.rssLoading.state = 'loading';
-        axios.get(myUrl)
-          .then((response) => {
-            const rssString = response.data.contents;
-            const feedAndPosts = parse(rssString);
-            console.log(feedAndPosts);
-            const { feed, posts } = feedAndPosts;
-            if (feed === null && posts.length === 0) {
-              watchedState.rssLoading.state = 'failed';
-              watchedState.rssLoading.error = 'ERR_CONTENT';
-              watchedState.formState.feedsUrls.pop();
-            } else {
-              feed.feedUrl = watchedState.formState.url;
-              watchedState.rssLoading.feeds.push(feed);
-              watchedState.rssLoading.posts = [...posts];
-              watchedState.rssLoading.state = 'processed';
-            }
-          })
-          .catch((networkErr) => {
-            watchedState.rssLoading.state = 'failed';
-            watchedState.rssLoading.error = networkErr.code;
-          });
+      })
+      .then(() => axios.get(myUrl))
+      .then((response) => {
+        const rssString = response.data.contents;
+        const feedAndPosts = parse(rssString);
+        const { feed, posts } = feedAndPosts;
+        if (feed === null && posts.length === 0) {
+          watchedState.rssLoading.state = 'failed';
+          watchedState.rssLoading.error = 'ERR_CONTENT';
+          watchedState.formState.feedsUrls.pop();
+          throw new Error('Not a rss!');
+        } else {
+          feed.feedUrl = watchedState.formState.url;
+          watchedState.rssLoading.feeds.push(feed);
+          watchedState.rssLoading.posts = [...posts];
+          watchedState.rssLoading.state = 'processed';
+        }
       })
       .then(() => {
         watchedState.rssLoading.state = 'ready for loading';
-        setTimeout(request, 5000, watchedState);
+        setTimeout(repeatingRequest, 5000, watchedState);
       })
       .catch((error) => {
-        const [errorType] = error.errors;
-        watchedState.formRegistration.valid = false;
-        watchedState.formRegistration.validationError = errorType;
-        form.reset();
+        console.log(error);
+        if (_.isObject(error) && error.code) {
+          watchedState.rssLoading.state = 'failed';
+          watchedState.rssLoading.error = error.code;
+        } else if (_.isObject(error) && error.errors) {
+          const [errorType] = error.errors;
+          watchedState.formState.valid = false;
+          watchedState.formState.validationError = errorType;
+        } else if (error === 'Error: Not a rss!') {
+          watchedState.rssLoading.state = 'failed';
+          watchedState.rssLoading.error = 'ERR_CONTENT';
+          watchedState.formState.feedsUrls.pop();
+        }
         input.focus();
       });
   });
