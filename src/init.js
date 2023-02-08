@@ -17,7 +17,7 @@ const getUrl = (url) => {
 };
 
 const repeatingRequest = (watchedState) => {
-  watchedState.rssLoading.state = 'ready for loading';
+  watchedState.automaticallyLoading.state = 'ready for loading';
   const { feeds, posts } = watchedState.rssLoading;
   feeds.forEach((feed) => {
     const url = feed.feedUrl;
@@ -39,11 +39,12 @@ const repeatingRequest = (watchedState) => {
             watchedState.rssLoading.posts.push(checkingPost);
           }
         });
-        watchedState.rssLoading.state = 'processed';
+        watchedState.automaticallyLoading.error = null;
+        watchedState.automaticallyLoading.state = 'processed';
       })
       .catch((networkErr) => {
-        watchedState.rssLoading.state = 'failed';
-        watchedState.rssLoading.error = networkErr.code;
+        watchedState.automaticallyLoading.state = 'failed';
+        watchedState.automaticallyLoading.error = networkErr.code;
       });
   });
   setTimeout(repeatingRequest, 5000, watchedState);
@@ -64,6 +65,10 @@ const app = (i18nextInstance) => {
       posts: [],
       error: null,
     },
+    automaticallyLoading: {
+      state: 'initial',
+      error: null,
+    },
     uiState: {
       modal: {
         openedWindowId: null,
@@ -78,7 +83,6 @@ const app = (i18nextInstance) => {
     return schema.validate(url, { abortEarly: false });
   };
   const form = document.querySelector('.rss-form');
-  const input = form.elements.url;
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -91,8 +95,6 @@ const app = (i18nextInstance) => {
         watchedState.formState.valid = true;
         watchedState.formState.validationError = null;
         watchedState.formState.feedsUrls.push(checkedUrl);
-        form.reset();
-        input.focus();
         watchedState.rssLoading.state = 'loading';
       })
       .then(() => axios.get(myUrl))
@@ -113,7 +115,6 @@ const app = (i18nextInstance) => {
         }
       })
       .then(() => {
-        watchedState.rssLoading.state = 'ready for loading';
         setTimeout(repeatingRequest, 5000, watchedState);
       })
       .catch((error) => {
@@ -130,7 +131,6 @@ const app = (i18nextInstance) => {
           watchedState.rssLoading.error = 'ERR_CONTENT';
           watchedState.formState.feedsUrls.pop();
         }
-        input.focus();
       });
   });
   const myModal = document.querySelector('#modal');

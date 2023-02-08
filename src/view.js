@@ -15,37 +15,50 @@ const renderLoading = (value) => {
 
 const renderFeedbackValidation = (error, i18nextInstance) => {
   const feedback = document.querySelector('.feedback');
+  const form = document.querySelector('.rss-form');
+  const input = form.elements.url;
   if (error === null) {
     feedback.textContent = '';
+    input.classList.remove('is-invalid');
   } else if (error === 'this must be a valid URL') {
+    input.classList.add('is-invalid');
     feedback.classList.remove('text-success');
     feedback.classList.add('text-danger');
     feedback.textContent = i18nextInstance.t('validationErrorNotURL');
   } else {
+    input.classList.add('is-invalid');
     feedback.classList.remove('text-success');
     feedback.classList.add('text-danger');
     feedback.textContent = i18nextInstance.t('validationErrorExistedURL');
   }
+  input.focus();
 };
 
 const renderFeedbackLoading = (error, i18nextInstance) => {
   const feedback = document.querySelector('.feedback');
+  const form = document.querySelector('.rss-form');
+  const input = form.elements.url;
   if (error === null) {
     feedback.classList.remove('text-danger');
     feedback.classList.add('text-success');
     feedback.textContent = i18nextInstance.t('loadingSuccess');
+    input.classList.remove('is-invalid');
+    form.reset();
   } else if (error === 'ERR_CONTENT') {
+    input.classList.add('is-invalid');
     feedback.classList.remove('text-success');
     feedback.classList.add('text-danger');
     feedback.textContent = i18nextInstance.t('rssError');
   } else if (error === 'ERR_NETWORK') {
+    input.classList.add('is-invalid');
     feedback.classList.remove('text-success');
     feedback.classList.add('text-danger');
     feedback.textContent = i18nextInstance.t('netError');
   }
+  input.focus();
 };
 
-const renderFeed = (value) => {
+const renderFeed = (value, i18nextInstance) => {
   const feeds = document.querySelector('.feeds');
   feeds.innerHTML = '';
   const container = document.createElement('div');
@@ -57,7 +70,7 @@ const renderFeed = (value) => {
   const highlight = document.createElement('h2');
   highlight.classList.add('card-title', 'h4');
   highlightContainer.append(highlight);
-  highlight.textContent = 'Фиды';
+  highlight.textContent = i18nextInstance.t('feeds');
   const feedsList = document.createElement('ul');
   feedsList.classList.add('list-group-item', 'border-0', 'border-end-0');
   container.append(feedsList);
@@ -76,7 +89,7 @@ const renderFeed = (value) => {
   });
 };
 
-const renderPost = (posts, watchedState) => {
+const renderPost = (posts, watchedState, i18nextInstance) => {
   const postElement = document.querySelector('.posts');
   postElement.innerHTML = '';
   const container = document.createElement('div');
@@ -88,7 +101,7 @@ const renderPost = (posts, watchedState) => {
   const highlight = document.createElement('h2');
   highlight.classList.add('card-title', 'h4');
   highlightContainer.append(highlight);
-  highlight.textContent = 'Посты';
+  highlight.textContent = i18nextInstance.t('posts');
   const postsList = document.createElement('ul');
   postsList.classList.add('list-group-item', 'border-0', 'border-end-0');
   container.append(postsList);
@@ -113,7 +126,7 @@ const renderPost = (posts, watchedState) => {
     button.setAttribute('data-bs-toggle', 'modal');
     button.setAttribute('data-bs-target', '#modal');
     button.setAttribute('data-id', post.itemId);
-    button.textContent = 'Просмотр';
+    button.textContent = i18nextInstance.t('modalButton');
     li.append(button);
   });
 };
@@ -136,14 +149,6 @@ const renderModal = (id, watchedState) => {
 };
 
 const watchState = (state, i18nextInstance) => onChange(state, (path, value) => {
-  if (path === 'formState.valid') {
-    const input = document.querySelector('#url-input');
-    if (value === false) {
-      input.classList.add('is-invalid');
-    } else if (value === true) {
-      input.classList.remove('is-invalid');
-    }
-  }
   if (path === 'formState.validationError') {
     renderFeedbackValidation(value, i18nextInstance);
   }
@@ -153,22 +158,24 @@ const watchState = (state, i18nextInstance) => onChange(state, (path, value) => 
     }
     if (value === 'processed') {
       renderLoading(value);
-      if (state.formState.language === 'ru') {
-        i18nextInstance.changeLanguage('ru');
-        renderFeedbackLoading(null, i18nextInstance);
-      }
-      renderFeed(state.rssLoading.feeds);
-      renderPost(state.rssLoading.posts, state);
+      renderFeedbackLoading(null, i18nextInstance);
+      renderFeed(state.rssLoading.feeds, i18nextInstance);
+      renderPost(state.rssLoading.posts, state, i18nextInstance);
     }
   }
   if (path === 'rssLoading.error') {
-    if (state.formState.language === 'ru') {
-      i18nextInstance.changeLanguage('ru');
-      renderFeedbackLoading(value, i18nextInstance);
-    }
+    renderFeedbackLoading(value, i18nextInstance);
   }
   if (path === 'uiState.modal.openedWindowId') {
     renderModal(value, state);
+  }
+  if (path === 'automaticallyLoading.state') {
+    if (value === 'processed') {
+      renderPost(state.rssLoading.posts, state, i18nextInstance);
+    }
+  }
+  if (path === 'automaticallyLoading.error') {
+    renderFeedbackLoading(value, i18nextInstance);
   }
 });
 

@@ -5,5 +5,8 @@ export default {
     loadingSuccess: 'RSS успешно загружен',
     netError: 'Ошибка сети',
     rssError: 'Ресурс не содержит валидный RSS',
+    posts: 'Посты',
+    feeds: 'Фиды',
+    modalButton: 'Просмотр',
   },
 };
