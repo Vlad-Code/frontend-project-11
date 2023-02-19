@@ -9,7 +9,7 @@ import watchState from './view.js';
 import resources from './locales/index.js';
 import parse from './parse.js';
 
-const getUrl = (url) => {
+const addProxy = (url) => {
   const urlWithProxy = new URL('/get', 'https://allorigins.hexlet.app');
   urlWithProxy.searchParams.set('url', url);
   urlWithProxy.searchParams.set('disableCache', 'true');
@@ -20,23 +20,30 @@ const repeatingRequest = (watchedState) => {
   watchedState.automaticallyLoading.state = 'ready for loading';
   const { feeds, posts } = watchedState.rssLoading;
   feeds.forEach((feed) => {
-    const url = feed.feedUrl;
-    const myUrl = getUrl(url);
+    const { url } = feed;
+    const myUrl = addProxy(url);
     axios.get(myUrl)
       .then((response) => {
         const rssString = response.data.contents;
-        const feedAndPosts = parse(rssString);
-        const checkingPosts = feedAndPosts.posts;
-        checkingPosts.forEach((checkingPost) => {
+        const updatedFeed = parse(rssString);
+        updatedFeed.id = feed.id;
+        const updatedPosts = updatedFeed.posts;
+        console.log(updatedPosts);
+        updatedPosts.forEach((updatedPost) => {
           const oldPosts = posts.filter((post) => {
-            if (post.postTitle === checkingPost.postTitle
-              && post.postLink === checkingPost.postLink) {
+            if (post.postTitle === updatedPost.postTitle
+              && post.postLink === updatedPost.postLink) {
               return true;
             }
             return false;
           });
           if (oldPosts.length === 0) {
-            watchedState.rssLoading.posts.push(checkingPost);
+            watchedState.rssLoading.posts.push(updatedPost);
+            const newPosts = watchedState.rssLoading.posts;
+            newPosts.forEach((newPost) => {
+              const newPostNumber = newPosts.indexOf(newPost);
+              newPost.postId = `${feed.id}_${newPostNumber}`;
+            });
           }
         });
         watchedState.automaticallyLoading.error = null;
@@ -88,7 +95,7 @@ const app = (i18nextInstance) => {
     const formData = new FormData(e.target);
     const url = formData.get('url');
     watchedState.formState.url = url;
-    const myUrl = getUrl(url);
+    const myUrl = addProxy(url);
     const { feedsUrls } = watchedState.formState;
     validate(url, feedsUrls)
       .then((checkedUrl) => {
@@ -100,17 +107,23 @@ const app = (i18nextInstance) => {
       .then(() => axios.get(myUrl))
       .then((response) => {
         const rssString = response.data.contents;
-        const feedAndPosts = parse(rssString);
-        const { feed, posts } = feedAndPosts;
-        if (feed === null && posts.length === 0) {
+        const feed = parse(rssString);
+        const { title, posts } = feed;
+        if (title === null && posts.length === 0) {
           watchedState.rssLoading.state = 'failed';
           watchedState.rssLoading.error = 'ERR_CONTENT';
           watchedState.formState.feedsUrls.pop();
           throw new Error('Not a rss!');
         } else {
-          feed.feedUrl = watchedState.formState.url;
+          feed.url = watchedState.formState.url;
+          feed.id = _.uniqueId();
           watchedState.rssLoading.feeds.push(feed);
           watchedState.rssLoading.posts = [...posts];
+          const newPosts = watchedState.rssLoading.posts;
+          newPosts.forEach((newPost) => {
+            const newPostNumber = newPosts.indexOf(newPost);
+            newPost.postId = `${feed.id}_${newPostNumber}`;
+          });
           watchedState.rssLoading.state = 'processed';
         }
       })
@@ -139,7 +152,7 @@ const app = (i18nextInstance) => {
     const anchor = buttonModal.previousElementSibling;
     const anchorId = anchor.getAttribute('data-id');
     watchedState.uiState.modal.openedWindowId = anchorId;
-    watchedState.uiState.modal.readingState.push(Number(anchorId));
+    watchedState.uiState.modal.readingState.push(anchorId);
   });
 };
 

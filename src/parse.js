@@ -1,30 +1,25 @@
-/* eslint-disable no-param-reassign */
+/* eslint-enable no-param-reassign */
 
 const parse = (rssString) => {
-  const feedAndPosts = { feed: null, posts: [] };
   const parser = new DOMParser();
   const rssDocument = parser.parseFromString(rssString, 'application/xml');
   const errorNode = rssDocument.querySelector('parsererror');
   if (errorNode) {
-    return feedAndPosts;
+    return { title: null, description: null, posts: [] };
   }
-  const feedTitle = rssDocument.querySelector('title').textContent;
-  const feedDescription = rssDocument.querySelector('description').textContent;
-  const newFeed = {
-    feedTitle, feedDescription,
-  };
-  feedAndPosts.feed = newFeed;
+  const title = rssDocument.querySelector('title').textContent;
+  const description = rssDocument.querySelector('description').textContent;
   const items = rssDocument.querySelectorAll('item');
-  items.forEach((item) => {
+  const posts = Array.from(items).map((item) => {
     const postTitle = item.querySelector('title').textContent;
     const postLink = item.querySelector('link').textContent;
     const postDescription = item.querySelector('description').textContent;
     const newPost = {
       postTitle, postLink, postDescription,
     };
-    feedAndPosts.posts.push(newPost);
+    return newPost;
   });
-  return feedAndPosts;
+  return { title, description, posts };
 };
 
 export default parse;

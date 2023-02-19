@@ -58,7 +58,7 @@ const renderFeedbackLoading = (error, i18nextInstance) => {
   input.focus();
 };
 
-const renderFeed = (value, i18nextInstance) => {
+const renderFeed = (feedsFromState, i18nextInstance) => {
   const feeds = document.querySelector('.feeds');
   feeds.innerHTML = '';
   const container = document.createElement('div');
@@ -74,18 +74,18 @@ const renderFeed = (value, i18nextInstance) => {
   const feedsList = document.createElement('ul');
   feedsList.classList.add('list-group-item', 'border-0', 'border-end-0');
   container.append(feedsList);
-  value.forEach((element) => {
+  feedsFromState.forEach((feed) => {
     const li = document.createElement('li');
     li.classList.add('list-group-item', 'border-0', 'border-end-0');
     feedsList.append(li);
     const title = document.createElement('h3');
     title.classList.add('h6', 'm-0');
     li.append(title);
-    title.textContent = element.feedTitle;
+    title.textContent = feed.title;
     const description = document.createElement('p');
     description.classList.add('m-0', 'small', 'text-black-50');
     li.append(description);
-    description.textContent = element.feedDescription;
+    description.textContent = feed.description;
   });
 };
 
@@ -106,16 +106,16 @@ const renderPost = (posts, watchedState, i18nextInstance) => {
   postsList.classList.add('list-group-item', 'border-0', 'border-end-0');
   container.append(postsList);
   posts.forEach((post) => {
-    const itemId = posts.indexOf(post);
+    const { postId } = post;
     const li = document.createElement('li');
     li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
     postsList.append(li);
     const anchor = document.createElement('a');
-    if (!watchedState.uiState.modal.readingState.includes(itemId)) {
+    if (!watchedState.uiState.modal.readingState.includes(postId)) {
       anchor.classList.add('fw-bold');
     }
-    anchor.setAttribute('href', post.itemLink);
-    anchor.setAttribute('data-id', itemId);
+    anchor.setAttribute('href', post.postLink);
+    anchor.setAttribute('data-id', postId);
     anchor.setAttribute('target', '_blank');
     anchor.setAttribute('rel', 'noopener noreferrer');
     li.append(anchor);
@@ -125,7 +125,7 @@ const renderPost = (posts, watchedState, i18nextInstance) => {
     button.setAttribute('type', 'button');
     button.setAttribute('data-bs-toggle', 'modal');
     button.setAttribute('data-bs-target', '#modal');
-    button.setAttribute('data-id', post.itemId);
+    button.setAttribute('data-id', postId);
     button.textContent = i18nextInstance.t('modalButton');
     li.append(button);
   });
@@ -139,12 +139,15 @@ const renderModal = (id, watchedState) => {
   const title = postAnchor.textContent;
   const modalTitle = myModal.querySelector('.modal-title');
   modalTitle.textContent = title;
-  const post = watchedState.rssLoading.posts[id];
-  const { postDescription } = post;
+  const { posts } = watchedState.rssLoading;
+  console.log(id);
+  console.log(posts);
+  const ourPost = posts.filter((post) => post.postId === id)[0];
+  const { postDescription } = ourPost;
   const modalBody = myModal.querySelector('.modal-body');
   modalBody.textContent = postDescription;
   const readButton = myModal.querySelector('[target="_blank"]');
-  const { postLink } = post;
+  const { postLink } = ourPost;
   readButton.setAttribute('href', postLink);
 };
 
