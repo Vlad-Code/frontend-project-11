@@ -16,7 +16,7 @@ const addProxy = (url) => {
   return urlWithProxy.toString();
 };
 
-const repeatingRequest = (watchedState) => {
+/* const repeatingRequest = (watchedState) => {
   watchedState.automaticallyLoading.state = 'ready for loading';
   const { feeds, posts } = watchedState.rssLoading;
   feeds.forEach((feed) => {
@@ -55,6 +55,67 @@ const repeatingRequest = (watchedState) => {
       });
   });
   setTimeout(repeatingRequest, 5000, watchedState);
+}; */
+const request = (state) => {
+  if (state.rssLoading.state === 'processed') {
+    state.rssLoading.state = 'loading';
+  }
+  const { feedsUrls } = state.formState;
+  feedsUrls.forEach((url) => {
+    const myUrl = addProxy(url);
+    axios.get(myUrl)
+      .then((response) => {
+        const rssString = response.data.contents;
+        const feed = parse(rssString);
+        const { title, posts } = feed;
+        if (title === null && posts.length === 0) {
+          state.rssLoading.state = 'failed';
+          state.rssLoading.error = 'ERR_CONTENT';
+          state.formState.feedsUrls.pop();
+          throw new Error('Not a rss!');
+        } else {
+          state.rssLoading.feeds = [];
+          feed.url = state.formState.url;
+          feed.id = _.uniqueId();
+          state.rssLoading.feeds.push(feed);
+          const oldPosts = state.rssLoading.posts;
+          //  state.rssLoading.posts = [...posts];
+          posts.forEach((updatedPost) => {
+            const oldPostsArray = oldPosts.filter((post) => {
+              if (post.postTitle === updatedPost.postTitle
+                && post.postLink === updatedPost.postLink) {
+                return true;
+              }
+              return false;
+            });
+            if (oldPostsArray.length === 0) {
+              state.rssLoading.posts.push(updatedPost);
+              const newPosts = state.rssLoading.posts;
+              newPosts.forEach((newPost) => {
+                const newPostNumber = newPosts.indexOf(newPost);
+                newPost.postId = `${feed.id}${newPostNumber}`;
+              });
+            }
+          });
+          if (state.rssLoading.state === 'firstLoading') {
+            state.rssLoading.state = 'processed';
+          } else if (state.rssLoading.state === 'loading') {
+            state.automaticallyLoading.state = 'processed';
+          }
+        }
+      })
+      .catch((error) => {
+        if (_.isObject(error) && error.code) {
+          state.rssLoading.state = 'failed';
+          state.rssLoading.error = error.code;
+        } else if (error === 'Error: Not a rss!') {
+          state.rssLoading.state = 'failed';
+          state.rssLoading.error = 'ERR_CONTENT';
+          state.formState.feedsUrls.pop();
+        }
+      });
+  });
+  return setTimeout(request, 5000, state);
 };
 
 const app = (i18nextInstance) => {
@@ -95,17 +156,15 @@ const app = (i18nextInstance) => {
     const formData = new FormData(e.target);
     const url = formData.get('url');
     watchedState.formState.url = url;
-    const myUrl = addProxy(url);
     const { feedsUrls } = watchedState.formState;
     validate(url, feedsUrls)
       .then((checkedUrl) => {
         watchedState.formState.valid = true;
         watchedState.formState.validationError = null;
         watchedState.formState.feedsUrls.push(checkedUrl);
-        watchedState.rssLoading.state = 'loading';
+        watchedState.rssLoading.state = 'firstLoading';
       })
-      .then(() => axios.get(myUrl))
-      .then((response) => {
+      /* .then((response) => {
         const rssString = response.data.contents;
         const feed = parse(rssString);
         const { title, posts } = feed;
@@ -126,24 +185,22 @@ const app = (i18nextInstance) => {
           });
           watchedState.rssLoading.state = 'processed';
         }
-      })
-      .then(() => {
-        setTimeout(repeatingRequest, 5000, watchedState);
-      })
+        return setTimeout(repeatingRequest, 5000, watchedState);
+      }) */
       .catch((error) => {
-        console.log(error);
-        if (_.isObject(error) && error.code) {
+        // console.log(error);
+        /* if (_.isObject(error) && error.code) {
           watchedState.rssLoading.state = 'failed';
           watchedState.rssLoading.error = error.code;
-        } else if (_.isObject(error) && error.errors) {
-          const [errorType] = error.errors;
-          watchedState.formState.valid = false;
-          watchedState.formState.validationError = errorType;
-        } else if (error === 'Error: Not a rss!') {
+        } */
+        const [errorType] = error.errors;
+        watchedState.formState.valid = false;
+        watchedState.formState.validationError = errorType;
+        /* else if (error === 'Error: Not a rss!') {
           watchedState.rssLoading.state = 'failed';
           watchedState.rssLoading.error = 'ERR_CONTENT';
           watchedState.formState.feedsUrls.pop();
-        }
+        } */
       });
   });
   const myModal = document.querySelector('#modal');
@@ -154,6 +211,7 @@ const app = (i18nextInstance) => {
     watchedState.uiState.modal.openedWindowId = anchorId;
     watchedState.uiState.modal.readingState.push(anchorId);
   });
+  return request(watchedState);
 };
 
 export default () => {
