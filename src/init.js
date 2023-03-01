@@ -57,12 +57,10 @@ const addProxy = (url) => {
   setTimeout(repeatingRequest, 5000, watchedState);
 }; */
 const request = (state) => {
-  if (state.rssLoading.state === 'processed') {
-    state.rssLoading.state = 'loading';
-  }
-  const { feedsUrls } = state.formState;
-  feedsUrls.forEach((url) => {
-    const myUrl = addProxy(url);
+  if (state.rssLoading.state === 'firstLoading') {
+    const { feedsUrls } = state.formState;
+    const newFeedUrl = _.last(feedsUrls);
+    const myUrl = addProxy(newFeedUrl);
     axios.get(myUrl)
       .then((response) => {
         const rssString = response.data.contents;
@@ -73,36 +71,12 @@ const request = (state) => {
           state.rssLoading.error = 'ERR_CONTENT';
           state.formState.feedsUrls.pop();
           throw new Error('Not a rss!');
-        } else {
-          state.rssLoading.feeds = [];
-          feed.url = state.formState.url;
-          feed.id = _.uniqueId();
-          state.rssLoading.feeds.push(feed);
-          const oldPosts = state.rssLoading.posts;
-          //  state.rssLoading.posts = [...posts];
-          posts.forEach((updatedPost) => {
-            const oldPostsArray = oldPosts.filter((post) => {
-              if (post.postTitle === updatedPost.postTitle
-                && post.postLink === updatedPost.postLink) {
-                return true;
-              }
-              return false;
-            });
-            if (oldPostsArray.length === 0) {
-              state.rssLoading.posts.push(updatedPost);
-              const newPosts = state.rssLoading.posts;
-              newPosts.forEach((newPost) => {
-                const newPostNumber = newPosts.indexOf(newPost);
-                newPost.postId = `${feed.id}${newPostNumber}`;
-              });
-            }
-          });
-          if (state.rssLoading.state === 'firstLoading') {
-            state.rssLoading.state = 'processed';
-          } else if (state.rssLoading.state === 'loading') {
-            state.automaticallyLoading.state = 'processed';
-          }
         }
+        feed.url = newFeedUrl;
+        feed.id = _.uniqueId();
+        state.rssLoading.feeds.push(feed);
+        // state.rssLoading.posts = [...posts, state.rssLoading.posts];
+        state.rssLoading.state = 'processed';
       })
       .catch((error) => {
         if (_.isObject(error) && error.code) {
@@ -114,8 +88,45 @@ const request = (state) => {
           state.formState.feedsUrls.pop();
         }
       });
+  }
+  state.automaticallyLoading.state = 'ready for loading';
+  const { feeds, posts } = state.rssLoading;
+  feeds.forEach((feed) => {
+    const { url } = feed;
+    const myUrl = addProxy(url);
+    axios.get(myUrl)
+      .then((response) => {
+        const rssString = response.data.contents;
+        const updatedFeed = parse(rssString);
+        updatedFeed.id = feed.id;
+        const updatedPosts = updatedFeed.posts;
+        console.log(updatedPosts);
+        updatedPosts.forEach((updatedPost) => {
+          const oldPosts = posts.filter((post) => {
+            if (post.postTitle === updatedPost.postTitle
+              && post.postLink === updatedPost.postLink) {
+              return true;
+            }
+            return false;
+          });
+          if (oldPosts.length === 0) {
+            state.rssLoading.posts.push(updatedPost);
+            const newPosts = state.rssLoading.posts;
+            newPosts.forEach((newPost) => {
+              const newPostNumber = newPosts.indexOf(newPost);
+              newPost.postId = `${feed.id}${newPostNumber}`;
+            });
+          }
+        });
+        state.automaticallyLoading.error = null;
+        state.automaticallyLoading.state = 'processed';
+      })
+      /*.catch((networkErr) => {
+        watchedState.automaticallyLoading.state = 'failed';
+        watchedState.automaticallyLoading.error = networkErr.code;
+      }); */
   });
-  return setTimeout(request, 5000, state);
+  setTimeout(request, 5000, state);
 };
 
 const app = (i18nextInstance) => {

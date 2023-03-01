@@ -59,6 +59,7 @@ const renderFeedbackLoading = (error, i18nextInstance) => {
 };
 
 const renderFeed = (feedsFromState, i18nextInstance) => {
+  console.log(feedsFromState)
   const feeds = document.querySelector('.feeds');
   feeds.innerHTML = '';
   const container = document.createElement('div');
@@ -75,6 +76,7 @@ const renderFeed = (feedsFromState, i18nextInstance) => {
   feedsList.classList.add('list-group-item', 'border-0', 'border-end-0');
   container.append(feedsList);
   feedsFromState.forEach((feed) => {
+    console.log('hey');
     const li = document.createElement('li');
     li.classList.add('list-group-item', 'border-0', 'border-end-0');
     feedsList.append(li);
