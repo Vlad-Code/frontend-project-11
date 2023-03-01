@@ -59,7 +59,7 @@ const renderFeedbackLoading = (error, i18nextInstance) => {
 };
 
 const renderFeed = (feedsFromState, i18nextInstance) => {
-  console.log(feedsFromState)
+  console.log(feedsFromState);
   const feeds = document.querySelector('.feeds');
   feeds.innerHTML = '';
   const container = document.createElement('div');

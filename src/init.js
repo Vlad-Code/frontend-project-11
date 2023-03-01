@@ -120,8 +120,8 @@ const request = (state) => {
         });
         state.automaticallyLoading.error = null;
         state.automaticallyLoading.state = 'processed';
-      })
-      /*.catch((networkErr) => {
+      });
+    /* .catch((networkErr) => {
         watchedState.automaticallyLoading.state = 'failed';
         watchedState.automaticallyLoading.error = networkErr.code;
       }); */
