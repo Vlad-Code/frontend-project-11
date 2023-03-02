@@ -75,7 +75,12 @@ const request = (state) => {
         feed.url = newFeedUrl;
         feed.id = _.uniqueId();
         state.rssLoading.feeds.push(feed);
-        // state.rssLoading.posts = [...posts, state.rssLoading.posts];
+        state.rssLoading.posts = [...state.rssLoading.posts, ...posts];
+        const newPosts = state.rssLoading.posts;
+        newPosts.forEach((newPost) => {
+          const newPostNumber = newPosts.indexOf(newPost);
+          newPost.postId = `${feed.id}${newPostNumber}`;
+        });
         state.rssLoading.state = 'processed';
       })
       .catch((error) => {
