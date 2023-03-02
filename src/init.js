@@ -16,46 +16,6 @@ const addProxy = (url) => {
   return urlWithProxy.toString();
 };
 
-/* const repeatingRequest = (watchedState) => {
-  watchedState.automaticallyLoading.state = 'ready for loading';
-  const { feeds, posts } = watchedState.rssLoading;
-  feeds.forEach((feed) => {
-    const { url } = feed;
-    const myUrl = addProxy(url);
-    axios.get(myUrl)
-      .then((response) => {
-        const rssString = response.data.contents;
-        const updatedFeed = parse(rssString);
-        updatedFeed.id = feed.id;
-        const updatedPosts = updatedFeed.posts;
-        console.log(updatedPosts);
-        updatedPosts.forEach((updatedPost) => {
-          const oldPosts = posts.filter((post) => {
-            if (post.postTitle === updatedPost.postTitle
-              && post.postLink === updatedPost.postLink) {
-              return true;
-            }
-            return false;
-          });
-          if (oldPosts.length === 0) {
-            watchedState.rssLoading.posts.push(updatedPost);
-            const newPosts = watchedState.rssLoading.posts;
-            newPosts.forEach((newPost) => {
-              const newPostNumber = newPosts.indexOf(newPost);
-              newPost.postId = `${feed.id}_${newPostNumber}`;
-            });
-          }
-        });
-        watchedState.automaticallyLoading.error = null;
-        watchedState.automaticallyLoading.state = 'processed';
-      })
-      .catch((networkErr) => {
-        watchedState.automaticallyLoading.state = 'failed';
-        watchedState.automaticallyLoading.error = networkErr.code;
-      });
-  });
-  setTimeout(repeatingRequest, 5000, watchedState);
-}; */
 const request = (state) => {
   if (state.rssLoading.state === 'firstLoading') {
     const { feedsUrls } = state.formState;
@@ -126,10 +86,6 @@ const request = (state) => {
         state.automaticallyLoading.error = null;
         state.automaticallyLoading.state = 'processed';
       });
-    /* .catch((networkErr) => {
-        watchedState.automaticallyLoading.state = 'failed';
-        watchedState.automaticallyLoading.error = networkErr.code;
-      }); */
   });
   setTimeout(request, 5000, state);
 };
@@ -180,43 +136,10 @@ const app = (i18nextInstance) => {
         watchedState.formState.feedsUrls.push(checkedUrl);
         watchedState.rssLoading.state = 'firstLoading';
       })
-      /* .then((response) => {
-        const rssString = response.data.contents;
-        const feed = parse(rssString);
-        const { title, posts } = feed;
-        if (title === null && posts.length === 0) {
-          watchedState.rssLoading.state = 'failed';
-          watchedState.rssLoading.error = 'ERR_CONTENT';
-          watchedState.formState.feedsUrls.pop();
-          throw new Error('Not a rss!');
-        } else {
-          feed.url = watchedState.formState.url;
-          feed.id = _.uniqueId();
-          watchedState.rssLoading.feeds.push(feed);
-          watchedState.rssLoading.posts = [...posts];
-          const newPosts = watchedState.rssLoading.posts;
-          newPosts.forEach((newPost) => {
-            const newPostNumber = newPosts.indexOf(newPost);
-            newPost.postId = `${feed.id}_${newPostNumber}`;
-          });
-          watchedState.rssLoading.state = 'processed';
-        }
-        return setTimeout(repeatingRequest, 5000, watchedState);
-      }) */
       .catch((error) => {
-        // console.log(error);
-        /* if (_.isObject(error) && error.code) {
-          watchedState.rssLoading.state = 'failed';
-          watchedState.rssLoading.error = error.code;
-        } */
         const [errorType] = error.errors;
         watchedState.formState.valid = false;
         watchedState.formState.validationError = errorType;
-        /* else if (error === 'Error: Not a rss!') {
-          watchedState.rssLoading.state = 'failed';
-          watchedState.rssLoading.error = 'ERR_CONTENT';
-          watchedState.formState.feedsUrls.pop();
-        } */
       });
   });
   const myModal = document.querySelector('#modal');

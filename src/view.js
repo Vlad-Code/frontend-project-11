@@ -59,7 +59,6 @@ const renderFeedbackLoading = (error, i18nextInstance) => {
 };
 
 const renderFeed = (feedsFromState, i18nextInstance) => {
-  console.log(feedsFromState);
   const feeds = document.querySelector('.feeds');
   feeds.innerHTML = '';
   const container = document.createElement('div');
@@ -76,7 +75,6 @@ const renderFeed = (feedsFromState, i18nextInstance) => {
   feedsList.classList.add('list-group-item', 'border-0', 'border-end-0');
   container.append(feedsList);
   feedsFromState.forEach((feed) => {
-    console.log('hey');
     const li = document.createElement('li');
     li.classList.add('list-group-item', 'border-0', 'border-end-0');
     feedsList.append(li);
@@ -142,8 +140,6 @@ const renderModal = (id, watchedState) => {
   const modalTitle = myModal.querySelector('.modal-title');
   modalTitle.textContent = title;
   const { posts } = watchedState.rssLoading;
-  console.log(id);
-  console.log(posts);
   const ourPost = posts.filter((post) => post.postId === id)[0];
   const { postDescription } = ourPost;
   const modalBody = myModal.querySelector('.modal-body');
