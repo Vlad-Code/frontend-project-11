@@ -4,7 +4,7 @@ const renderLoading = (value) => {
   const form = document.querySelector('.rss-form');
   const input = form.elements.url;
   const button = document.querySelector('button[type="submit"]');
-  if (value === 'firstLoading') {
+  if (value === 'loading') {
     input.disabled = true;
     button.disabled = true;
   } else if (value === 'processed' || value === 'failed') {
@@ -154,7 +154,7 @@ const watchState = (state, i18nextInstance) => onChange(state, (path, value) => 
     renderFeedbackValidation(value, i18nextInstance);
   }
   if (path === 'rssLoading.state') {
-    if (value === 'firstLoading' || value === 'failed' || value === 'loading') {
+    if (value === 'failed' || value === 'loading') {
       renderLoading(value);
     }
     if (value === 'processed') {
@@ -174,9 +174,6 @@ const watchState = (state, i18nextInstance) => onChange(state, (path, value) => 
     if (value === 'processed') {
       renderPost(state.rssLoading.posts, state, i18nextInstance);
     }
-  }
-  if (path === 'automaticallyLoading.error') {
-    renderFeedbackLoading(value, i18nextInstance);
   }
 });
 

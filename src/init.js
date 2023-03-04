@@ -17,59 +17,23 @@ const addProxy = (url) => {
 };
 
 const request = (state) => {
-  if (state.rssLoading.state === 'firstLoading') {
-    const { feedsUrls } = state.formState;
-    const newFeedUrl = _.last(feedsUrls);
-    const myUrl = addProxy(newFeedUrl);
-    axios.get(myUrl)
-      .then((response) => {
-        const rssString = response.data.contents;
-        const feed = parse(rssString);
-        const { title, posts } = feed;
-        if (title === null && posts.length === 0) {
-          state.rssLoading.state = 'failed';
-          state.rssLoading.error = 'ERR_CONTENT';
-          state.formState.feedsUrls.pop();
-          throw new Error('Not a rss!');
-        }
-        feed.url = newFeedUrl;
-        feed.id = _.uniqueId();
-        state.rssLoading.feeds.push(feed);
-        state.rssLoading.posts = [...state.rssLoading.posts, ...posts];
-        const newPosts = state.rssLoading.posts;
-        newPosts.forEach((newPost) => {
-          const newPostNumber = newPosts.indexOf(newPost);
-          newPost.postId = `${feed.id}${newPostNumber}`;
-        });
-        state.rssLoading.state = 'processed';
-      })
-      .catch((error) => {
-        if (_.isObject(error) && error.code) {
-          state.rssLoading.state = 'failed';
-          state.rssLoading.error = error.code;
-        } else if (error === 'Error: Not a rss!') {
-          state.rssLoading.state = 'failed';
-          state.rssLoading.error = 'ERR_CONTENT';
-          state.formState.feedsUrls.pop();
-        }
-      });
-  }
-  state.automaticallyLoading.state = 'ready for loading';
+  state.automaticallyLoading.state = 'loading';
   const { feeds, posts } = state.rssLoading;
-  feeds.forEach((feed) => {
-    const { url } = feed;
-    const myUrl = addProxy(url);
-    axios.get(myUrl)
-      .then((response) => {
+  const proxyUrls = feeds.map((feed) => addProxy(feed.url));
+  const requests = proxyUrls.map((proxyUrl) => axios.get(proxyUrl));
+  Promise.all(requests)
+    .then((responses) => {
+      responses.forEach((response) => {
+        const index = responses.indexOf(response);
+        const actualFeed = feeds[index];
         const rssString = response.data.contents;
         const updatedFeed = parse(rssString);
-        updatedFeed.id = feed.id;
+        updatedFeed.id = actualFeed.id;
         const updatedPosts = updatedFeed.posts;
-        console.log(updatedPosts);
         updatedPosts.forEach((updatedPost) => {
           const oldPosts = posts.filter((post) => {
             if (post.postTitle === updatedPost.postTitle
-              && post.postLink === updatedPost.postLink) {
+            && post.postLink === updatedPost.postLink) {
               return true;
             }
             return false;
@@ -79,15 +43,15 @@ const request = (state) => {
             const newPosts = state.rssLoading.posts;
             newPosts.forEach((newPost) => {
               const newPostNumber = newPosts.indexOf(newPost);
-              newPost.postId = `${feed.id}${newPostNumber}`;
+              newPost.postId = `${updatedFeed.id}${newPostNumber}`;
             });
           }
         });
         state.automaticallyLoading.error = null;
         state.automaticallyLoading.state = 'processed';
       });
-  });
-  setTimeout(request, 5000, state);
+    });
+  return setTimeout(request, 5000, state);
 };
 
 const app = (i18nextInstance) => {
@@ -100,14 +64,13 @@ const app = (i18nextInstance) => {
       feedsUrls: [],
     },
     rssLoading: {
-      state: 'ready for loading',
+      state: 'initial',
       feeds: [],
       posts: [],
       error: null,
     },
     automaticallyLoading: {
       state: 'initial',
-      error: null,
     },
     uiState: {
       modal: {
@@ -134,12 +97,45 @@ const app = (i18nextInstance) => {
         watchedState.formState.valid = true;
         watchedState.formState.validationError = null;
         watchedState.formState.feedsUrls.push(checkedUrl);
-        watchedState.rssLoading.state = 'firstLoading';
+        watchedState.rssLoading.state = 'loading';
+        const newFeedUrl = _.last(feedsUrls);
+        const myUrl = addProxy(newFeedUrl);
+        axios.get(myUrl)
+          .then((response) => {
+            const rssString = response.data.contents;
+            const feed = parse(rssString);
+            const { title, posts } = feed;
+            if (title === null && posts.length === 0) {
+              watchedState.rssLoading.state = 'failed';
+              watchedState.rssLoading.error = 'ERR_CONTENT';
+              watchedState.formState.feedsUrls.pop();
+              throw new Error('Not a rss!');
+            }
+            feed.url = newFeedUrl;
+            feed.id = _.uniqueId();
+            watchedState.rssLoading.feeds.push(feed);
+            watchedState.rssLoading.posts = [...watchedState.rssLoading.posts, ...posts];
+            const newPosts = watchedState.rssLoading.posts;
+            newPosts.forEach((newPost) => {
+              const newPostNumber = newPosts.indexOf(newPost);
+              newPost.postId = `${feed.id}${newPostNumber}`;
+            });
+            watchedState.rssLoading.state = 'processed';
+          });
       })
       .catch((error) => {
-        const [errorType] = error.errors;
-        watchedState.formState.valid = false;
-        watchedState.formState.validationError = errorType;
+        if (_.isObject(error) && error.code) {
+          watchedState.rssLoading.state = 'failed';
+          watchedState.rssLoading.error = error.code;
+        } else if (error === 'Error: Not a rss!') {
+          watchedState.rssLoading.state = 'failed';
+          watchedState.rssLoading.error = 'ERR_CONTENT';
+          watchedState.formState.feedsUrls.pop();
+        } else if (_.isObject(error) && error.errors) {
+          const [errorType] = error.errors;
+          watchedState.formState.valid = false;
+          watchedState.formState.validationError = errorType;
+        }
       });
   });
   const myModal = document.querySelector('#modal');
@@ -150,7 +146,7 @@ const app = (i18nextInstance) => {
     watchedState.uiState.modal.openedWindowId = anchorId;
     watchedState.uiState.modal.readingState.push(anchorId);
   });
-  return request(watchedState);
+  request(watchedState);
 };
 
 export default () => {
