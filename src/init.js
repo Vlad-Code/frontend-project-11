@@ -51,7 +51,7 @@ const request = (state) => {
         state.automaticallyLoading.state = 'processed';
       });
     });
-  return setTimeout(request, 5000, state);
+  setTimeout(request, 5000, state);
 };
 
 const app = (i18nextInstance) => {
@@ -121,13 +121,18 @@ const app = (i18nextInstance) => {
               newPost.postId = `${feed.id}${newPostNumber}`;
             });
             watchedState.rssLoading.state = 'processed';
+          })
+          .catch((error) => {
+            watchedState.rssLoading.state = 'failed';
+            watchedState.rssLoading.error = error.code;
           });
       })
       .catch((error) => {
+        /* console.log(error);
         if (_.isObject(error) && error.code) {
           watchedState.rssLoading.state = 'failed';
           watchedState.rssLoading.error = error.code;
-        } else if (error === 'Error: Not a rss!') {
+        } */ if (error === 'Error: Not a rss!') {
           watchedState.rssLoading.state = 'failed';
           watchedState.rssLoading.error = 'ERR_CONTENT';
           watchedState.formState.feedsUrls.pop();
