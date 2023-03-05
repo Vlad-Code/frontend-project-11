@@ -13,7 +13,7 @@ const renderLoading = (value) => {
   }
 };
 
-const renderFeedbackValidation = (error, i18nextInstance) => {
+/*const renderFeedbackValidation = (error, i18nextInstance) => {
   const feedback = document.querySelector('.feedback');
   const form = document.querySelector('.rss-form');
   const input = form.elements.url;
@@ -32,9 +32,9 @@ const renderFeedbackValidation = (error, i18nextInstance) => {
     feedback.textContent = i18nextInstance.t('validationErrorExistedURL');
   }
   input.focus();
-};
+};*/
 
-const renderFeedbackLoading = (error, i18nextInstance) => {
+/* const renderFeedbackLoading = (error, i18nextInstance) => {
   const feedback = document.querySelector('.feedback');
   const form = document.querySelector('.rss-form');
   const input = form.elements.url;
@@ -56,7 +56,28 @@ const renderFeedbackLoading = (error, i18nextInstance) => {
     feedback.textContent = i18nextInstance.t('netError');
   }
   input.focus();
-};
+}; */
+
+const renderFeedback = (error, i18nextInstance) => {
+  const feedback = document.querySelector('.feedback');
+  const form = document.querySelector('.rss-form');
+  const input = form.elements.url;
+  if (error === null) {
+    feedback.classList.remove('text-danger');
+    feedback.classList.add('text-success');
+    feedback.textContent = i18nextInstance.t('loadingSuccess');
+    input.classList.remove('is-invalid');
+    form.reset();
+  } else {
+    input.classList.add('is-invalid');
+    feedback.classList.remove('text-success');
+    feedback.classList.add('text-danger');
+    feedback.textContent = i18nextInstance.t(error);
+  }
+  input.focus();
+}
+
+
 
 const renderFeed = (feedsFromState, i18nextInstance) => {
   const feeds = document.querySelector('.feeds');
@@ -151,7 +172,7 @@ const renderModal = (id, watchedState) => {
 
 const watchState = (state, i18nextInstance) => onChange(state, (path, value) => {
   if (path === 'formState.validationError') {
-    renderFeedbackValidation(value, i18nextInstance);
+    renderFeedback(value, i18nextInstance);
   }
   if (path === 'rssLoading.state') {
     if (value === 'failed' || value === 'loading') {
@@ -159,13 +180,13 @@ const watchState = (state, i18nextInstance) => onChange(state, (path, value) => 
     }
     if (value === 'processed') {
       renderLoading(value);
-      renderFeedbackLoading(null, i18nextInstance);
+      renderFeedback(state.rssLoading.error, i18nextInstance);
       renderFeed(state.rssLoading.feeds, i18nextInstance);
       renderPost(state.rssLoading.posts, state, i18nextInstance);
     }
   }
   if (path === 'rssLoading.error') {
-    renderFeedbackLoading(value, i18nextInstance);
+    renderFeedback(value, i18nextInstance);
   }
   if (path === 'uiState.modal.openedWindowId') {
     renderModal(value, state);

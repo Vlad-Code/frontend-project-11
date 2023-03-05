@@ -39,15 +39,14 @@ const request = (state) => {
             return false;
           });
           if (oldPosts.length === 0) {
-            state.rssLoading.posts.push(updatedPost);
-            const newPosts = state.rssLoading.posts;
-            newPosts.forEach((newPost) => {
-              const newPostNumber = newPosts.indexOf(newPost);
-              newPost.postId = `${updatedFeed.id}${newPostNumber}`;
+            const unitedPosts = [...state.rssLoading.posts, updatedPost];
+            const allPostsWithID = unitedPosts.map((post) => {
+              const newPostNumber = unitedPosts.indexOf(post);
+              return { ...post, postId: `${updatedFeed.id}${newPostNumber}` };
             });
+            state.rssLoading.posts = allPostsWithID;
           }
         });
-        state.automaticallyLoading.error = null;
         state.automaticallyLoading.state = 'processed';
       });
     });
@@ -98,48 +97,42 @@ const app = (i18nextInstance) => {
         watchedState.formState.validationError = null;
         watchedState.formState.feedsUrls.push(checkedUrl);
         watchedState.rssLoading.state = 'loading';
-        const newFeedUrl = _.last(feedsUrls);
-        const myUrl = addProxy(newFeedUrl);
-        axios.get(myUrl)
-          .then((response) => {
-            const rssString = response.data.contents;
-            const feed = parse(rssString);
-            const { title, posts } = feed;
-            if (title === null && posts.length === 0) {
-              watchedState.rssLoading.state = 'failed';
-              watchedState.rssLoading.error = 'ERR_CONTENT';
-              watchedState.formState.feedsUrls.pop();
-              throw new Error('Not a rss!');
-            }
-            feed.url = newFeedUrl;
-            feed.id = _.uniqueId();
-            watchedState.rssLoading.feeds.push(feed);
-            watchedState.rssLoading.posts = [...watchedState.rssLoading.posts, ...posts];
-            const newPosts = watchedState.rssLoading.posts;
-            newPosts.forEach((newPost) => {
-              const newPostNumber = newPosts.indexOf(newPost);
-              newPost.postId = `${feed.id}${newPostNumber}`;
-            });
-            watchedState.rssLoading.state = 'processed';
-          })
-          .catch((error) => {
-            watchedState.rssLoading.state = 'failed';
-            watchedState.rssLoading.error = error.code;
-          });
+        const myUrl = addProxy(url);
+        return axios.get(myUrl);
+      })
+      .then((response) => {
+        const rssString = response.data.contents;
+        const feed = parse(rssString);
+        const { posts } = feed;
+        const id = _.uniqueId();
+        const modifiedFeed = { ...feed, url, id };
+        watchedState.rssLoading.feeds.push(modifiedFeed);
+        const unitedPosts = [...watchedState.rssLoading.posts, ...posts];
+        const allPostsWithID = unitedPosts.map((post) => {
+          const newPostNumber = unitedPosts.indexOf(post);
+          return { ...post, postId: `${feed.id}${newPostNumber}` };
+        });
+        watchedState.rssLoading.posts = allPostsWithID;
+        watchedState.rssLoading.error = null;
+        watchedState.rssLoading.state = 'processed';
       })
       .catch((error) => {
-        /* console.log(error);
         if (_.isObject(error) && error.code) {
           watchedState.rssLoading.state = 'failed';
-          watchedState.rssLoading.error = error.code;
-        } */ if (error === 'Error: Not a rss!') {
+          watchedState.rssLoading.error = 'netError';
+          watchedState.formState.feedsUrls.pop();
+        } else if (error.toString() === 'Error: Not a rss!') {
           watchedState.rssLoading.state = 'failed';
-          watchedState.rssLoading.error = 'ERR_CONTENT';
+          watchedState.rssLoading.error = 'rssError';
           watchedState.formState.feedsUrls.pop();
         } else if (_.isObject(error) && error.errors) {
-          const [errorType] = error.errors;
           watchedState.formState.valid = false;
-          watchedState.formState.validationError = errorType;
+          const [errorType] = error.errors;
+          if (errorType === 'this must be a valid URL') {
+            watchedState.formState.validationError = 'validationErrorNotURL';
+          } else {
+            watchedState.formState.validationError = 'validationErrorExistedURL';
+          }
         }
       });
   });
