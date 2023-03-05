@@ -13,7 +13,7 @@ const renderLoading = (value) => {
   }
 };
 
-/*const renderFeedbackValidation = (error, i18nextInstance) => {
+/* const renderFeedbackValidation = (error, i18nextInstance) => {
   const feedback = document.querySelector('.feedback');
   const form = document.querySelector('.rss-form');
   const input = form.elements.url;
@@ -32,7 +32,7 @@ const renderLoading = (value) => {
     feedback.textContent = i18nextInstance.t('validationErrorExistedURL');
   }
   input.focus();
-};*/
+}; */
 
 /* const renderFeedbackLoading = (error, i18nextInstance) => {
   const feedback = document.querySelector('.feedback');
@@ -75,9 +75,7 @@ const renderFeedback = (error, i18nextInstance) => {
     feedback.textContent = i18nextInstance.t(error);
   }
   input.focus();
-}
-
-
+};
 
 const renderFeed = (feedsFromState, i18nextInstance) => {
   const feeds = document.querySelector('.feeds');
