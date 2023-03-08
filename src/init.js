@@ -17,7 +17,6 @@ const addProxy = (url) => {
 };
 
 const request = (state) => {
-  state.automaticallyLoading.state = 'loading';
   const { feeds, posts } = state.rssLoading;
   const proxyUrls = feeds.map((feed) => addProxy(feed.url));
   const requests = proxyUrls.map((proxyUrl) => axios.get(proxyUrl));
@@ -47,10 +46,10 @@ const request = (state) => {
             state.rssLoading.posts = allPostsWithID;
           }
         });
-        state.automaticallyLoading.state = 'processed';
       });
-    });
-  setTimeout(request, 5000, state);
+    })
+    .catch(() => console.log('Net Error'))
+    .finally(() => setTimeout(request, 5000, state));
 };
 
 const app = (i18nextInstance) => {
@@ -58,7 +57,6 @@ const app = (i18nextInstance) => {
     formState: {
       language: 'ru',
       url: null,
-      valid: true,
       validationError: null,
       feedsUrls: [],
     },
@@ -67,9 +65,6 @@ const app = (i18nextInstance) => {
       feeds: [],
       posts: [],
       error: null,
-    },
-    automaticallyLoading: {
-      state: 'initial',
     },
     uiState: {
       modal: {
@@ -89,11 +84,10 @@ const app = (i18nextInstance) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const url = formData.get('url');
-    watchedState.formState.url = url;
     const { feedsUrls } = watchedState.formState;
     validate(url, feedsUrls)
       .then((checkedUrl) => {
-        watchedState.formState.valid = true;
+        watchedState.formState.url = url;
         watchedState.formState.validationError = null;
         watchedState.formState.feedsUrls.push(checkedUrl);
         watchedState.rssLoading.state = 'loading';
@@ -126,7 +120,6 @@ const app = (i18nextInstance) => {
           watchedState.rssLoading.error = 'rssError';
           watchedState.formState.feedsUrls.pop();
         } else if (_.isObject(error) && error.errors) {
-          watchedState.formState.valid = false;
           const [errorType] = error.errors;
           if (errorType === 'this must be a valid URL') {
             watchedState.formState.validationError = 'validationErrorNotURL';
@@ -134,7 +127,8 @@ const app = (i18nextInstance) => {
             watchedState.formState.validationError = 'validationErrorExistedURL';
           }
         }
-      });
+      })
+      .finally(() => request(watchedState));
   });
   const myModal = document.querySelector('#modal');
   myModal.addEventListener('shown.bs.modal', (event) => {
@@ -144,7 +138,6 @@ const app = (i18nextInstance) => {
     watchedState.uiState.modal.openedWindowId = anchorId;
     watchedState.uiState.modal.readingState.push(anchorId);
   });
-  request(watchedState);
 };
 
 export default () => {

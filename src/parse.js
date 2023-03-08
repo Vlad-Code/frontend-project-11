@@ -5,7 +5,6 @@ const parse = (rssString) => {
   const rssDocument = parser.parseFromString(rssString, 'application/xml');
   const errorNode = rssDocument.querySelector('parsererror');
   if (errorNode) {
-    // return { title: null, description: null, posts: [] };
     throw new Error('Not a rss!');
   }
   const title = rssDocument.querySelector('title').textContent;

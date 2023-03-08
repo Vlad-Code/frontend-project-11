@@ -168,7 +168,7 @@ const renderModal = (id, watchedState) => {
   readButton.setAttribute('href', postLink);
 };
 
-const watchState = (state, i18nextInstance) => onChange(state, (path, value) => {
+/* const watchState = (state, i18nextInstance) => onChange(state, (path, value) => {
   if (path === 'formState.validationError') {
     renderFeedback(value, i18nextInstance);
   }
@@ -193,6 +193,33 @@ const watchState = (state, i18nextInstance) => onChange(state, (path, value) => 
     if (value === 'processed') {
       renderPost(state.rssLoading.posts, state, i18nextInstance);
     }
+  }
+}); */
+
+const watchState = (state, i18nextInstance) => onChange(state, (path, value) => {
+  switch (path) {
+    case 'formState.validationError':
+      renderFeedback(value, i18nextInstance);
+      break;
+    case 'rssLoading.state':
+      renderLoading(value);
+      renderFeedback(state.rssLoading.error, i18nextInstance);
+      break;
+    case 'rssLoading.feeds':
+      renderFeed(value, i18nextInstance);
+      break;
+    case 'rssLoading.posts':
+      renderPost(value, state, i18nextInstance);
+      break;
+    case 'rssLoading.error':
+      renderFeedback(value, i18nextInstance);
+      break;
+    case 'uiState.modal.openedWindowId':
+      renderModal(value, state);
+      break;
+    default:
+      console.log('Other change of the state');
+      break;
   }
 });
 
