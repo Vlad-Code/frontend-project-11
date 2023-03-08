@@ -168,34 +168,6 @@ const renderModal = (id, watchedState) => {
   readButton.setAttribute('href', postLink);
 };
 
-/* const watchState = (state, i18nextInstance) => onChange(state, (path, value) => {
-  if (path === 'formState.validationError') {
-    renderFeedback(value, i18nextInstance);
-  }
-  if (path === 'rssLoading.state') {
-    if (value === 'failed' || value === 'loading') {
-      renderLoading(value);
-    }
-    if (value === 'processed') {
-      renderLoading(value);
-      renderFeedback(state.rssLoading.error, i18nextInstance);
-      renderFeed(state.rssLoading.feeds, i18nextInstance);
-      renderPost(state.rssLoading.posts, state, i18nextInstance);
-    }
-  }
-  if (path === 'rssLoading.error') {
-    renderFeedback(value, i18nextInstance);
-  }
-  if (path === 'uiState.modal.openedWindowId') {
-    renderModal(value, state);
-  }
-  if (path === 'automaticallyLoading.state') {
-    if (value === 'processed') {
-      renderPost(state.rssLoading.posts, state, i18nextInstance);
-    }
-  }
-}); */
-
 const watchState = (state, i18nextInstance) => onChange(state, (path, value) => {
   switch (path) {
     case 'formState.validationError':
