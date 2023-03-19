@@ -130,7 +130,7 @@ const renderPost = (posts, watchedState, i18nextInstance) => {
     li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
     postsList.append(li);
     const anchor = document.createElement('a');
-    if (!watchedState.uiState.modal.readingState.includes(postId)) {
+    if (!watchedState.uiState.modal.visitedLinks.includes(postId)) {
       anchor.classList.add('fw-bold');
     }
     anchor.setAttribute('href', post.postLink);
@@ -152,13 +152,13 @@ const renderPost = (posts, watchedState, i18nextInstance) => {
 
 const renderModal = (id, watchedState) => {
   const postAnchor = document.querySelector(`a[data-id="${id}"]`);
-  postAnchor.classList.remove('fw-bold');
-  postAnchor.classList.add('fw-normal');
+  /* postAnchor.classList.remove('fw-bold');
+  postAnchor.classList.add('fw-normal'); */
   const myModal = document.querySelector('#modal');
   const title = postAnchor.textContent;
   const modalTitle = myModal.querySelector('.modal-title');
   modalTitle.textContent = title;
-  const { posts } = watchedState.rssLoading;
+  const { posts } = watchedState;
   const ourPost = posts.filter((post) => post.postId === id)[0];
   const { postDescription } = ourPost;
   const modalBody = myModal.querySelector('.modal-body');
@@ -166,6 +166,14 @@ const renderModal = (id, watchedState) => {
   const readButton = myModal.querySelector('[target="_blank"]');
   const { postLink } = ourPost;
   readButton.setAttribute('href', postLink);
+};
+
+const renderAnchorState = (visitedLinks) => {
+  visitedLinks.forEach((id) => {
+    const postAnchor = document.querySelector(`a[data-id="${id}"]`);
+    postAnchor.classList.remove('fw-bold');
+    postAnchor.classList.add('fw-normal');
+  });
 };
 
 const watchState = (state, i18nextInstance) => onChange(state, (path, value) => {
@@ -177,10 +185,10 @@ const watchState = (state, i18nextInstance) => onChange(state, (path, value) => 
       renderLoading(value);
       renderFeedback(state.rssLoading.error, i18nextInstance);
       break;
-    case 'rssLoading.feeds':
+    case 'feeds':
       renderFeed(value, i18nextInstance);
       break;
-    case 'rssLoading.posts':
+    case 'posts':
       renderPost(value, state, i18nextInstance);
       break;
     case 'rssLoading.error':
@@ -188,6 +196,9 @@ const watchState = (state, i18nextInstance) => onChange(state, (path, value) => 
       break;
     case 'uiState.modal.openedWindowId':
       renderModal(value, state);
+      break;
+    case 'uiState.modal.visitedLinks':
+      renderAnchorState(value);
       break;
     default:
       console.log('Other change of the state');
