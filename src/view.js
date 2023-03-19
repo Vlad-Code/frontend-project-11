@@ -13,51 +13,6 @@ const renderLoading = (value) => {
   }
 };
 
-/* const renderFeedbackValidation = (error, i18nextInstance) => {
-  const feedback = document.querySelector('.feedback');
-  const form = document.querySelector('.rss-form');
-  const input = form.elements.url;
-  if (error === null) {
-    feedback.textContent = '';
-    input.classList.remove('is-invalid');
-  } else if (error === 'this must be a valid URL') {
-    input.classList.add('is-invalid');
-    feedback.classList.remove('text-success');
-    feedback.classList.add('text-danger');
-    feedback.textContent = i18nextInstance.t('validationErrorNotURL');
-  } else {
-    input.classList.add('is-invalid');
-    feedback.classList.remove('text-success');
-    feedback.classList.add('text-danger');
-    feedback.textContent = i18nextInstance.t('validationErrorExistedURL');
-  }
-  input.focus();
-}; */
-
-/* const renderFeedbackLoading = (error, i18nextInstance) => {
-  const feedback = document.querySelector('.feedback');
-  const form = document.querySelector('.rss-form');
-  const input = form.elements.url;
-  if (error === null) {
-    feedback.classList.remove('text-danger');
-    feedback.classList.add('text-success');
-    feedback.textContent = i18nextInstance.t('loadingSuccess');
-    input.classList.remove('is-invalid');
-    form.reset();
-  } else if (error === 'ERR_CONTENT') {
-    input.classList.add('is-invalid');
-    feedback.classList.remove('text-success');
-    feedback.classList.add('text-danger');
-    feedback.textContent = i18nextInstance.t('rssError');
-  } else if (error === 'ERR_NETWORK') {
-    input.classList.add('is-invalid');
-    feedback.classList.remove('text-success');
-    feedback.classList.add('text-danger');
-    feedback.textContent = i18nextInstance.t('netError');
-  }
-  input.focus();
-}; */
-
 const renderFeedback = (error, i18nextInstance) => {
   const feedback = document.querySelector('.feedback');
   const form = document.querySelector('.rss-form');
@@ -152,8 +107,6 @@ const renderPost = (posts, watchedState, i18nextInstance) => {
 
 const renderModal = (id, watchedState) => {
   const postAnchor = document.querySelector(`a[data-id="${id}"]`);
-  /* postAnchor.classList.remove('fw-bold');
-  postAnchor.classList.add('fw-normal'); */
   const myModal = document.querySelector('#modal');
   const title = postAnchor.textContent;
   const modalTitle = myModal.querySelector('.modal-title');

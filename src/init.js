@@ -43,23 +43,6 @@ const request = (state) => {
           return { ...post, postId: `${updatedFeed.id}${newPostNumber}` };
         });
         state.posts = allPostsWithID;
-        /* updatedPosts.forEach((updatedPost) => {
-          const oldPosts = posts.filter((post) => {
-            if (post.postTitle === updatedPost.postTitle
-            && post.postLink === updatedPost.postLink) {
-              return true;
-            }
-            return false;
-          });
-          if (oldPosts.length === 0) {
-            const unitedPosts = [...state.posts, updatedPost];
-            const allPostsWithID = unitedPosts.map((post) => {
-              const newPostNumber = unitedPosts.indexOf(post);
-              return { ...post, postId: `${updatedFeed.id}${newPostNumber}` };
-            });
-            state.posts = allPostsWithID;
-          }
-        }); */
       });
     })
     .catch(() => console.log('Net Error'))
@@ -72,14 +55,11 @@ const app = (i18nextInstance) => {
       language: 'ru',
       url: null,
       validationError: null,
-      // feedsUrls: [],
     },
     feeds: [],
     posts: [],
     rssLoading: {
       state: 'initial',
-      // feeds: [],
-      // posts: [],
       error: null,
     },
     uiState: {
@@ -100,14 +80,12 @@ const app = (i18nextInstance) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const url = formData.get('url');
-    // const { feedsUrls } = watchedState.formState;
     const { feeds } = watchedState;
     const feedsUrls = feeds.map((feed) => feed.url);
     validate(url, feedsUrls)
       .then(() => {
         watchedState.formState.url = url;
         watchedState.formState.validationError = null;
-        // watchedState.formState.feedsUrls.push(checkedUrl);
         watchedState.rssLoading.state = 'loading';
         const myUrl = addProxy(url);
         return axios.get(myUrl);
@@ -133,11 +111,9 @@ const app = (i18nextInstance) => {
         if (_.isObject(error) && error.code) {
           watchedState.rssLoading.state = 'failed';
           watchedState.rssLoading.error = 'netError';
-          // watchedState.formState.feedsUrls.pop();
         } else if (error.isParse) {
           watchedState.rssLoading.state = 'failed';
           watchedState.rssLoading.error = 'rssError';
-          // watchedState.formState.feedsUrls.pop();
         } else if (_.isObject(error) && error.errors) {
           const [errorType] = error.errors;
           if (errorType === 'this must be a valid URL') {
