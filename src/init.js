@@ -34,7 +34,6 @@ const request = (state) => {
           posts,
           (post1, post2) => post1.postTitle === post2.postTitle,
         );
-        //console.log(newPosts);
         if (newPosts.length === 0) {
           return;
         }
@@ -130,11 +129,12 @@ const app = (i18nextInstance) => {
         watchedState.rssLoading.state = 'processed';
       })
       .catch((error) => {
+        console.log(error);
         if (_.isObject(error) && error.code) {
           watchedState.rssLoading.state = 'failed';
           watchedState.rssLoading.error = 'netError';
           // watchedState.formState.feedsUrls.pop();
-        } else if (_.isObject(error) && error.isParse()) {
+        } else if (error.isParse) {
           watchedState.rssLoading.state = 'failed';
           watchedState.rssLoading.error = 'rssError';
           // watchedState.formState.feedsUrls.pop();

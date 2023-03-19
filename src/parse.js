@@ -6,9 +6,7 @@ const parse = (rssString) => {
   const errorNode = rssDocument.querySelector('parsererror');
   if (errorNode) {
     const error = {
-      isParse() {
-        return true;
-      },
+      isParse: true,
     };
     throw error;
   }
